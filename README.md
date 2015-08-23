@@ -17,6 +17,7 @@ Use environment variable MAZINGAME_HIGHSCORE_FILE to set another file.
 
 ========================================================================
 Optional arguments for mazingame.py:
+```
   -h, --help            show this help message and exit
   -l LEVEL, --level LEVEL
                         Choose level. Any integer.
@@ -31,4 +32,4 @@ Optional arguments for mazingame.py:
                         high score file (default is
                         $HOME/.mazingame_highscores.sqlite).
   -v, --version         Show version info.
-
+```
