@@ -6,7 +6,8 @@ Inspired by book "Mazes for Programmers" by Jamis Buck
 Idea of the game is to find a path through the maze to spot marked by 'X'.
 
 ========================================================================
-Start MazinGame using command: python mazingame.py
+Start MazinGame using command: python mazingame.py.
+
 You will start at some location in the bottom of the maze. 'X' is somewhere
 upper. Move using cursor keys or 'w','a','s','d'.
 Quit pressing 'q' or Ctrl-C.
