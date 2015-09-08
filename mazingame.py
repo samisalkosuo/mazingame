@@ -38,7 +38,7 @@ from gameclasses import MazingCell
 from gameclasses import GameGrid
 
 NAME="MazinGame"
-VERSION="0.2"
+VERSION="0.3"
 COPYRIGHT="(C) 2015 Sami Salkosuo"
 LICENSE="Licensed under The MIT License."
 DESCRIPTION=["A game of maze.","Inspired by the book 'Mazes for Programmers' by Jamis Buck","(https://pragprog.com/book/jbmaze/mazes-for-programmers)."]
