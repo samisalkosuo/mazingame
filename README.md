@@ -17,13 +17,21 @@ The default highscore file location is $HOME/.mazingame_highscores.sqlite.
 Use environment variable MAZINGAME_HIGHSCORE_FILE to set another file.
 
 ========================================================================
-Optional arguments for mazingame.py:
 ```
+usage: mazingame.py [-h] [-l LEVEL] [-r GAMEID] [-a {BT,RB}] [-f] [--showpath]
+                    [-hs] [-v]
+
+MazinGame. A game of maze.
+
+optional arguments:
   -h, --help            show this help message and exit
   -l LEVEL, --level LEVEL
                         Choose level. Any integer.
   -r GAMEID, --replay GAMEID
                         Replay game with specified id.
+  -a {BT,RB}, --algorithm {BT,RB}
+                        Choose maze algorithm: BT=Binary Tree,RB=Recursive
+                        Backtracker. Default is random.
   -f, --fullscreen      Use terminal to show entire maze. But only if terminal
                         size is larger than the maze.
   --showpath            Show shortest path. Remember: this is cheating.
@@ -33,4 +41,4 @@ Optional arguments for mazingame.py:
                         high score file (default is
                         $HOME/.mazingame_highscores.sqlite).
   -v, --version         Show version info.
-```
+  ```
