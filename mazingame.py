@@ -170,7 +170,7 @@ class GameScreen:
         self.grid=GameGrid(MAZE_ROWS,MAZE_COLS,cellClass=MazingCell)
         self.algorithm=""
         
-        if args.algorithm:
+        if level is None and args.algorithm:
             self.algorithm=args.algorithm[0]
         else:
             self.algorithm=random.choice(MAZE_ALGORITHMS.keys())
