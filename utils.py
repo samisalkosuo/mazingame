@@ -72,7 +72,7 @@ def appendToFile(filename, lines=[]):
 
 def appendToFile(filename, str):
     file=open(filename,"a")
-    file.write("str")
+    file.write(str)
     file.write("\n")
     file.close()
 

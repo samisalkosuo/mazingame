@@ -15,11 +15,15 @@ Quit pressing 'q' or Ctrl-C.
 When, or if, you reach 'X', the ending score is saved to SQLite database.
 The default highscore file location is $HOME/.mazingame_highscores.sqlite.
 Use environment variable MAZINGAME_HIGHSCORE_FILE to set another file.
+Note: database in high score file may change from version to version, if you
+get SQLite error when saving high scores, delete your high score file.
+
+See http://sami.salkosuo.net/mazingame/ for some background about MazinGame.
 
 ========================================================================
 ```
 usage: mazingame.py [-h] [-l LEVEL] [-r GAMEID] [-a {BT,RB}] [-f] [--showpath]
-                    [-hs] [-v]
+                    [--showmaze] [-hs] [--cheat] [-v]
 
 MazinGame. A game of maze.
 
@@ -35,10 +39,12 @@ optional arguments:
   -f, --fullscreen      Use terminal to show entire maze. But only if terminal
                         size is larger than the maze.
   --showpath            Show shortest path. Remember: this is cheating.
+  --showmaze            Show entire maze. Remember: this is cheating.
   -hs, --highscores     Show high scores. Specify --level to select scores for
                         the level and --showpath to incude cheat scores. Use
                         MAZINGAME_HIGHSCORE_FILE environment variable to set
                         high score file (default is
                         $HOME/.mazingame_highscores.sqlite).
+  --cheat               Show also cheat highscores.
   -v, --version         Show version info.
-  ```
+```

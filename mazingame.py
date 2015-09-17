@@ -66,6 +66,7 @@ args=None
 MAZE_ALGORITHMS=dict()
 MAZE_ALGORITHMS["BT"]="Binary Tree"
 MAZE_ALGORITHMS["RB"]="Recursive Backtracker"
+MAZE_ALGORITHMS["S"]="Sidewinder"
 
 MAZE_ALGORITHMS_DESC=[]
 for a in MAZE_ALGORITHMS.keys():
@@ -79,7 +80,9 @@ def parseCommandLineArgs():
     parser.add_argument('-a','--algorithm', nargs=1, choices=MAZE_ALGORITHMS.keys(),help='Choose maze algorithm: %s. Default is random.' % (",".join(MAZE_ALGORITHMS_DESC)))
     parser.add_argument('-f','--fullscreen', action='store_true', help='Use terminal to show entire maze. But only if terminal size is larger than the maze.')
     parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
+    parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
     parser.add_argument('-hs','--highscores', action='store_true', help='Show high scores. Specify --level to select scores for the level and --showpath to incude cheat scores. Use %s environment variable to set high score file (default is $HOME/%s).' % (MAZINGAME_HIGHSCORE_FILE,DEFAULT_MAZINGAME_HIGHSCORE_FILE))
+    parser.add_argument('--cheat', action='store_true', help='Show also cheat highscores.')
     parser.add_argument('-v','--version', action='store_true', help='Show version info.')
     
     global args
@@ -179,9 +182,11 @@ class GameScreen:
             self.grid=maze.initBinaryTreeMaze(self.grid)
         if self.algorithm=="RB":
             self.grid=maze.initRecursiveBacktrackerMaze(self.grid)
-        #self.grid=maze.initBinaryTreeMaze(self.grid)
-        
-        #find solution shortest path
+        if self.algorithm=="S":
+            self.grid=maze.initSidewinderMaze(self.grid)
+
+        #TODO: add export arg to export maze in some format
+        #utils.appendToFile("maze2.txt",self.grid.asciiStr()) 
         #set start time after maze has been initialized
         self.startTime=utils.currentTimeMillis()
 
@@ -201,6 +206,7 @@ class GameScreen:
         goalScreenColumn=(1+goalColumn)*4-2
         self.goal=Goal(goalRow,goalColumn,goalScreenRow,goalScreenColumn)
 
+        #find solution shortest path
         distances = currentCell.getDistances()
         self.shortestPath=distances.pathTo(self.grid.getCell(goalRow,goalColumn))
         self.shortestPathLength=len(self.shortestPath)-1#does not count starting position
@@ -236,6 +242,15 @@ class GameScreen:
                     self.gamepad.addch(y,x, ord(self.goal.symbol))
                 else:
                     self.gamepad.addch(y,x, ord('*'))
+
+        if args.showmaze:
+            for row in range(MAZE_ROWS):
+                for col in range(MAZE_COLS):
+                    currentCell=self.grid.getCell(row,col)
+                    screenRow=row*2+1
+                    screenColumn=(1+col)*4-2
+                    self.renderCell(currentCell,screenRow, screenColumn)
+
 
         #player location on screen
         #center of screen in bottom row above status line
@@ -589,10 +604,10 @@ def start(stdscr,textList):
 
     if replayGameId is None:
         if gameScreen.gameover==True:
-            showpath=False
-            if args.showpath:
-                showpath=True
-            gameid=saveScores(gameScreen.player,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,showpath,gameScreen.algorithm)
+            cheat=False
+            if args.showpath or args.showmaze:
+                cheat=True
+            gameid=saveScores(gameScreen.player,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,cheat,gameScreen.algorithm)
             textList.append("'X' reached:")
             textList.append("  Game ID  : %d" % gameid)
             textList.append("  Level    : %d" % gameScreen.level)
@@ -600,8 +615,10 @@ def start(stdscr,textList):
             textList.append("  Moves    : %d/%d" % (gameScreen.totalMoves,gameScreen.shortestPathLength))
             textList.append("  Elapsed  : %.03fsecs" % gameScreen.elapsed)
             textList.append("  Score    : %d" % gameScreen.score)
-            if showpath==True:
+            if args.showpath:
                 textList.append("  --showpath cheat was active.")
+            if args.showmaze:
+                textList.append("  --showmaze cheat was active.")
         else:
             textList.append("'X' not reached:")
             textList.append("  Level  : %d" % gameScreen.level)
@@ -629,19 +646,20 @@ def getHighScoreFile():
     #utils.debug(dbFile)
     return dbFile
 
-def saveScores(player,level,score,moves,shortestPath,elapsed,showpath,algorithm):
-    #note for the future: migrate database if adding new fields
+def saveScores(player,level,score,moves,shortestPath,elapsed,cheat,algorithm):
+    #TODO: change high score file to text file and use inmemory sqlite to show scores
+    #similar to CLI Password Manager
     dbFile=getHighScoreFile()
 
     timestamp=utils.currentTimeISO8601()
     (conn,cursor)=utils.openDatabase(dbFile)
 
     #SQLite uses boolean value '1' for true and '0' false
-    cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,show_path_active integer,version text)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat integer,version text)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, row integer, column integer)''')
 
-    values = (timestamp,score,level,elapsed,moves,shortestPath,showpath,player.name,algorithm,VERSION)
-    cursor.execute('insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,show_path_active,player_name,algorithm,version) values (?,?,?,?,?,?,?,?,?,?)', values)
+    values = (timestamp,score,level,elapsed,moves,shortestPath,cheat,player.name,algorithm,VERSION)
+    cursor.execute('insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version) values (?,?,?,?,?,?,?,?,?,?)', values)
     #save player moves for replay
     values= (timestamp,)
     cursor.execute("select gameid from highscores where timestamp=?",values)
@@ -662,27 +680,29 @@ def listHighScores():
     (conn,cursor)=utils.openDatabase(dbFile)
 
     level=None
-    showPath=False
     algorithm=None
-    if args.showpath:
-        showPath=True
+
+    cheat=False
+    if args.showpath or args.showmaze or args.cheat:
+        cheat=True
+
     if args.level:
         level=args.level[0]
     if args.algorithm:
         algorithm=args.algorithm[0]
     
     values= None
-    sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,show_path_active,version from highscores"
+    sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version from highscores"
     if level is not None:
         sql=sql+" where level=%d" % level
     if level is not None:
         sql=sql+" and " 
     else:
         sql=sql+" where " 
-    if showPath==True:
-        sql=sql+" (show_path_active=0 or show_path_active=1)"
+    if cheat==True:
+        sql=sql+" (cheat=0 or cheat=1)"
     else:
-        sql=sql+" show_path_active=0"
+        sql=sql+" cheat=0"
     if algorithm is not None:
         sql=sql+" and algorithm='%s'" % algorithm
 
@@ -698,7 +718,7 @@ def listHighScores():
         scoreRow=[]
         scoreRow.append(rank)
         rank=rank+1
-        cheat=row['show_path_active']
+        cheat=row['cheat']
         score=row['score']
         if cheat==1:
             score="%d (cheat)" % score

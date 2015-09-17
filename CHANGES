@@ -1,6 +1,9 @@
-Version 0.3 (07.09.2015)
+Version 0.3 (17.09.2015)
 
-- 
+- Added --showmaze option to show entire maze (this is cheating).
+- Changed high score file format.
+- Added --cheat option to show cheat high scores.
+- Added Sidewinder-algorithm.
 
 Version 0.2 (07.09.2015)
 

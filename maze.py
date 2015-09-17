@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-#Couple of mazes classes translated from Ruby 
+#Some mazes classes translated from Ruby 
 #from book "Mazes for Programmers" by Jamis Buck.
 #https://pragprog.com/book/jbmaze/mazes-for-programmers
 #
 #Includes modifications.
 #
-#Execute this and you see Binary Tree Maze and
-#Recursive Backtracker Maze.
+#Execute this and you see mazes.
+
 
 import random
 
@@ -288,6 +288,26 @@ def initRecursiveBacktrackerMaze(grid):
     return grid
 
 
+def initSidewinderMaze(grid):
+    tf=[True,False]
+    for row in grid.eachRow():
+        run=[]
+        for cell in row:
+            run.append(cell)
+            at_eastern_boundary = (cell.east == None)
+            at_northern_boundary = (cell.north == None)
+            #note: ruby: 0 == True
+            should_close_out =at_eastern_boundary or ( at_northern_boundary==False and random.choice(tf) == True)
+            if should_close_out == True:
+                member = random.choice(run)
+                if member.north:
+                    member.link(member.north)
+                run=[]
+            else:
+                cell.link(cell.east)
+    return grid
+
+#====================
 def initRecursiveBacktrackerMaze2(grid):
     rbWalkFrom(grid.randomCell())
     return grid
@@ -322,3 +342,7 @@ if __name__ == "__main__":
     print("Goal: ", goal)
     print(grid)
 
+    grid=Grid(rows,columns)
+    grid=initSidewinderMaze(grid)
+    print("Sidewinder Maze:")
+    print(grid)
