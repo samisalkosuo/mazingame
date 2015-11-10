@@ -248,6 +248,8 @@ class DistanceGrid(Grid):
             return "   " #super(Grid, self).contentsOf(cell)
 
 
+#====================
+#Maze algorithms
 
 def initBinaryTreeMaze(grid):
     for cell in grid.eachCell():
@@ -307,7 +309,20 @@ def initSidewinderMaze(grid):
                 cell.link(cell.east)
     return grid
 
+def initAldousBroderMaze(grid):
+    cell=grid.randomCell()
+    unvisited=grid.size()-1
+    while unvisited > 0:
+        neighbor = random.choice(cell.neighbors())
+        if len(neighbor.getLinks())==0:#isempty
+            cell.link(neighbor)
+            unvisited=unvisited-1
+        cell=neighbor
+    return grid
+
+
 #====================
+
 def initRecursiveBacktrackerMaze2(grid):
     rbWalkFrom(grid.randomCell())
     return grid
@@ -345,4 +360,9 @@ if __name__ == "__main__":
     grid=Grid(rows,columns)
     grid=initSidewinderMaze(grid)
     print("Sidewinder Maze:")
+    print(grid)
+
+    grid=Grid(rows,columns)
+    grid=initAldousBroderMaze(grid)
+    print("Aldous Broder Maze:")
     print(grid)

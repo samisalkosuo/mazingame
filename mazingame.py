@@ -38,7 +38,7 @@ from gameclasses import MazingCell
 from gameclasses import GameGrid
 
 NAME="MazinGame"
-VERSION="0.3"
+VERSION="0.4"
 COPYRIGHT="(C) 2015 Sami Salkosuo"
 LICENSE="Licensed under The MIT License."
 DESCRIPTION=["A game of maze.","Inspired by the book 'Mazes for Programmers' by Jamis Buck","(https://pragprog.com/book/jbmaze/mazes-for-programmers)."]
@@ -64,6 +64,7 @@ args=None
 
 #maze algorithms
 MAZE_ALGORITHMS=dict()
+MAZE_ALGORITHMS["AB"]="Aldous Broder"
 MAZE_ALGORITHMS["BT"]="Binary Tree"
 MAZE_ALGORITHMS["RB"]="Recursive Backtracker"
 MAZE_ALGORITHMS["S"]="Sidewinder"
@@ -178,6 +179,8 @@ class GameScreen:
         else:
             self.algorithm=random.choice(MAZE_ALGORITHMS.keys())
         
+        if self.algorithm=="AB":
+            self.grid=maze.initAldousBroderMaze(self.grid)
         if self.algorithm=="BT":
             self.grid=maze.initBinaryTreeMaze(self.grid)
         if self.algorithm=="RB":

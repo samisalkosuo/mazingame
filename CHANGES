@@ -1,3 +1,7 @@
+Version 0.4 (xx.xx.2015)
+
+- Added Aldous Broder-algorithm.
+
 Version 0.3 (17.09.2015)
 
 - Added --showmaze option to show entire maze (this is cheating).
