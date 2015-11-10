@@ -22,7 +22,7 @@ See http://sami.salkosuo.net/mazingame/ for some background about MazinGame.
 
 ========================================================================
 ```
-usage: mazingame.py [-h] [-l LEVEL] [-r GAMEID] [-a {BT,S,RB}] [-f]
+usage: mazingame.py [-h] [-l LEVEL] [-r GAMEID] [-a {BT,S,AB,RB}] [-f]
                     [--showpath] [--showmaze] [-hs] [--cheat] [-v]
 
 MazinGame. A game of maze.
@@ -33,10 +33,10 @@ optional arguments:
                         Choose level. Any integer.
   -r GAMEID, --replay GAMEID
                         Replay game with specified id.
-  -a {BT,S,RB}, --algorithm {BT,S,RB}
+  -a {BT,S,AB,RB}, --algorithm {BT,S,AB,RB}
                         Choose maze algorithm: BT=Binary
-                        Tree,S=Sidewinder,RB=Recursive Backtracker. Default is
-                        random.
+                        Tree,S=Sidewinder,AB=Aldous Broder,RB=Recursive
+                        Backtracker. Default is random.
   -f, --fullscreen      Use terminal to show entire maze. But only if terminal
                         size is larger than the maze.
   --showpath            Show shortest path. Remember: this is cheating.
