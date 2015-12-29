@@ -68,6 +68,7 @@ MAZE_ALGORITHMS["AB"]="Aldous Broder"
 MAZE_ALGORITHMS["BT"]="Binary Tree"
 MAZE_ALGORITHMS["RB"]="Recursive Backtracker"
 MAZE_ALGORITHMS["S"]="Sidewinder"
+MAZE_ALGORITHMS["W"]="Wilson"
 
 MAZE_ALGORITHMS_DESC=[]
 for a in MAZE_ALGORITHMS.keys():
@@ -187,7 +188,9 @@ class GameScreen:
             self.grid=maze.initRecursiveBacktrackerMaze(self.grid)
         if self.algorithm=="S":
             self.grid=maze.initSidewinderMaze(self.grid)
-
+        if self.algorithm=="W":
+            self.grid=maze.initWilsonMaze(self.grid)
+    
         #TODO: add export arg to export maze in some format
         #utils.appendToFile("maze2.txt",self.grid.asciiStr()) 
         #set start time after maze has been initialized

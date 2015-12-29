@@ -11,6 +11,9 @@
 
 import random
 
+#====================
+#Maze classes
+
 class Cell:
     
     def __init__(self,row,column):
@@ -82,6 +85,9 @@ class Cell:
                         newFrontier.append(linked)
             frontier=newFrontier
         return distances
+
+    def toString(self):
+        return self.__str__()
 
     def __str__(self):
         output="Cell[%d,%d], Linked neighbors: " % (self.row,self.column)
@@ -320,6 +326,33 @@ def initAldousBroderMaze(grid):
         cell=neighbor
     return grid
 
+def initWilsonMaze(grid):
+    unvisited=[]
+    for cell in grid.eachCell():
+        unvisited.append(cell)
+
+    first = random.choice(unvisited)
+    unvisited.remove(first)
+
+    while len(unvisited)>0:
+        cell=random.choice(unvisited)
+        path=[cell]
+        while cell in unvisited:
+            cell=random.choice(cell.neighbors())
+            if cell in path:
+                position=path.index(cell)
+                #in Ruby code: path = path[0..position]
+                #is in Python needs the line below
+                path=path[:position+1]
+            else:
+                path.append(cell)
+        #in Ryby: 0.upto(path.length-2)
+        #is in Python the line below
+        for i in range(len(path)-1):
+            path[i].link(path[i+1])
+            unvisited.remove(path[i])
+
+    return grid
 
 #====================
 
@@ -334,12 +367,14 @@ def rbWalkFrom(cell):
             cell.link(neighbor)
             rbWalkFrom(neighbor)
 
+
 if __name__ == "__main__": 
     rows,columns=10,10
     grid=Grid(rows,columns)
     grid=initBinaryTreeMaze(grid)
     print("Binary Tree Maze:")
     print(grid)
+   
     grid=DistanceGrid(rows,columns)
     grid=initRecursiveBacktrackerMaze(grid)
 
@@ -353,8 +388,8 @@ if __name__ == "__main__":
     distances = start.getDistances()
     grid.distances = distances.pathTo(goal)
     print("Recursive Backtracker Maze:")
-    print("Start: ", start)
-    print("Goal: ", goal)
+    print("Start: ", start.toString())
+    print("Goal: ", goal.toString())
     print(grid)
 
     grid=Grid(rows,columns)
@@ -366,3 +401,20 @@ if __name__ == "__main__":
     grid=initAldousBroderMaze(grid)
     print("Aldous Broder Maze:")
     print(grid)
+
+#    grid=Grid(rows,columns)
+    grid=DistanceGrid(rows,columns)
+    grid=initWilsonMaze(grid)
+    startRow=0#random.randint(0, rows-1)
+    startColumn=0#random.randint(0, columns-1)
+    start = grid.getCell(startRow,startColumn)
+    goalRow=rows-1#random.randint(0, rows-1)
+    goalColumn=columns-1#random.randint(0, columns-1)
+    goal= grid.getCell(goalRow,goalColumn)
+    distances = start.getDistances()
+    grid.distances = distances.pathTo(goal)
+    print("Wilson Maze:")
+    print("Start: ", start.toString())
+    print("Goal: ", goal.toString())
+    print(grid)
+
