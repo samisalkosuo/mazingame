@@ -8,8 +8,7 @@ Idea of the game is to find a path through the maze to spot marked by 'X'.
 Requirements
 ------------
 
-Python 2.7 with curses. Does not work with Python3. Tested with Cygwin and 
-Mac OS X.
+Python 2.7 with curses. Developed and tested with Cygwin Mac OS X. Does not work with Python3 nor Windows without Cygwin.
 
 Install
 -------
