@@ -2,8 +2,7 @@ MazinGame
 =========
 A game of maze.
 
-Idea of the game is to find a path through the maze to spot marked by 'X'.
-
+Idea of the game is to find a path through the maze to a location marked by 'X'.
 
 Requirements
 ------------
@@ -14,7 +13,6 @@ Install
 -------
 
 Install latest version: *pip install mazingame*
-
 
 Instructions
 ------------
@@ -38,7 +36,6 @@ And a few more.
 
 Note: database in high score file may change from version to version, if you
 get SQLite error when saving high scores, delete your high score file.
-
 
 About
 -----
