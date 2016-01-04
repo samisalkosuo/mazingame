@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 #!/usr/bin/env python
 #
 # The MIT License (MIT)
 
-# Copyright (c) 2015 Sami Salkosuo
+# Copyright (c) 2015,2016 Sami Salkosuo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +23,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+#add correct version number here
+__version__ = "1.0.0"
+
 from curses import wrapper
 import getpass
 import os
@@ -38,8 +42,8 @@ from gameclasses import MazingCell
 from gameclasses import GameGrid
 
 NAME="MazinGame"
-VERSION="0.4"
-COPYRIGHT="(C) 2015 Sami Salkosuo"
+VERSION=__version__
+COPYRIGHT="(C) 2015,2016 Sami Salkosuo"
 LICENSE="Licensed under The MIT License."
 DESCRIPTION=["A game of maze.","Inspired by the book 'Mazes for Programmers' by Jamis Buck","(https://pragprog.com/book/jbmaze/mazes-for-programmers)."]
 
@@ -775,26 +779,26 @@ def listHighScores():
     utils.closeDatabase(conn)
 
 def main():
-    parseCommandLineArgs()
-    if args.highscores:
-        listHighScores()
-        return
-    if args.version:
-        print("%s v%s" % (NAME,VERSION))
-        print("")
-        print("\n".join(DESCRIPTION))
-        print("")
-        print(COPYRIGHT)
-        print(LICENSE)
-        return
-    textList=[]
-    wrapper(start,textList)
-    if textList:
-        print("\n".join(textList))
-
-if __name__ == "__main__": 
     try:
-        main()
+        parseCommandLineArgs()
+        if args.highscores:
+            listHighScores()
+            return
+        if args.version:
+            print("%s v%s" % (NAME,VERSION))
+            print("")
+            print("\n".join(DESCRIPTION))
+            print("")
+            print(COPYRIGHT)
+            print(LICENSE)
+            return
+        textList=[]
+        wrapper(start,textList)
+        if textList:
+            print("\n".join(textList))
     except KeyboardInterrupt:
         #ignore ctrl-c
         pass
+
+if __name__ == "__main__": 
+    main()
