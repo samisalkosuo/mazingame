@@ -1,4 +1,4 @@
-MazinGame
+*MazinGame
 =========
 A game of maze.
 
@@ -12,7 +12,7 @@ Python 2.7 with curses. Developed and tested with Cygwin Mac OS X. Does not work
 Install
 -------
 
-Install latest version: *pip install mazingame*
+Install latest version: **pip install mazingame**.
 
 Instructions
 ------------
