@@ -5,7 +5,7 @@
  
  
 import re
-from setuptools import setup
+from setuptools import setup, find_packages
 
 projectName="mazingame"
 scriptFile="%s/%s.py" % (projectName,projectName)
@@ -25,10 +25,11 @@ with open("README.rst", "rb") as f:
  
 setup(
     name = projectName,
-    packages = [projectName],
+    packages = find_packages(),
     entry_points = {
         "console_scripts": ['%s = %s.%s:main' % (projectName,projectName,projectName)]
         },
+    install_requires = ['mazepy'],
     version = version,
     description = description,
     long_description = long_descr,
@@ -40,8 +41,9 @@ setup(
     "Environment :: Console :: Curses",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 2 :: Only",
-    "Topic :: Games/Entertainment"
-    ],
+    "Topic :: Games/Entertainment",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3 :: Only"
+    ]
     )
