@@ -1,3 +1,11 @@
+Version 1.1.0 (13.06.2016)
+
+- Moved to Python3 (Python2 no longer supported).
+- Added Hunt And Kill-algorithm.
+- Removed base maze classes and functions.
+- And added dependency to mazepy-project, that includes
+  base maze classes and functions.
+
 Version 1.0.0 (03.01.2016)
 
 - Pip distribution.

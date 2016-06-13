@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 #add correct version number here
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from curses import wrapper
 import getpass
@@ -34,12 +34,13 @@ import curses
 import argparse
 import time
 import random
-import maze
-import utils
-from gameclasses import Player
-from gameclasses import Goal
-from gameclasses import MazingCell
-from gameclasses import GameGrid
+
+from mazepy import mazepy
+from .utils import utils
+from .gameclasses import Player
+from .gameclasses import Goal
+from .gameclasses import MazingCell
+from .gameclasses import GameGrid
 
 NAME="MazinGame"
 VERSION=__version__
@@ -67,16 +68,8 @@ SCREEN_COLUMNS=80
 args=None
 
 #maze algorithms
-MAZE_ALGORITHMS=dict()
-MAZE_ALGORITHMS["AB"]="Aldous Broder"
-MAZE_ALGORITHMS["BT"]="Binary Tree"
-MAZE_ALGORITHMS["RB"]="Recursive Backtracker"
-MAZE_ALGORITHMS["S"]="Sidewinder"
-MAZE_ALGORITHMS["W"]="Wilson"
-
-MAZE_ALGORITHMS_DESC=[]
-for a in MAZE_ALGORITHMS.keys():
-    MAZE_ALGORITHMS_DESC.append("%s=%s" % (a,MAZE_ALGORITHMS[a]))
+MAZE_ALGORITHMS=mazepy.MAZE_ALGORITHMS
+MAZE_ALGORITHMS_DESC=mazepy.MAZE_ALGORITHMS_DESC
 
 def parseCommandLineArgs():
     #parse command line args
@@ -182,18 +175,9 @@ class GameScreen:
         if level is None and args.algorithm:
             self.algorithm=args.algorithm[0]
         else:
-            self.algorithm=random.choice(MAZE_ALGORITHMS.keys())
+            self.algorithm=random.choice(list(MAZE_ALGORITHMS.keys()))
         
-        if self.algorithm=="AB":
-            self.grid=maze.initAldousBroderMaze(self.grid)
-        if self.algorithm=="BT":
-            self.grid=maze.initBinaryTreeMaze(self.grid)
-        if self.algorithm=="RB":
-            self.grid=maze.initRecursiveBacktrackerMaze(self.grid)
-        if self.algorithm=="S":
-            self.grid=maze.initSidewinderMaze(self.grid)
-        if self.algorithm=="W":
-            self.grid=maze.initWilsonMaze(self.grid)
+        self.grid=mazepy.initMaze(self.grid,self.algorithm)
     
         #TODO: add export arg to export maze in some format
         #utils.appendToFile("maze2.txt",self.grid.asciiStr()) 

@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import maze
+from mazepy import mazepy
 
 class Player:
     
@@ -61,8 +61,7 @@ class Goal:
         return output
 
 
-
-class MazingCell(maze.Cell):
+class MazingCell(mazepy.Cell):
 
     content="   "
 
@@ -107,7 +106,7 @@ class MazingCell(maze.Cell):
 
         return output
 
-class GameGrid(maze.Grid):
+class GameGrid(mazepy.Grid):
 
     def contentsOf(self,cell):
         return cell.getContent()

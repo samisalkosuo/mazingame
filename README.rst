@@ -1,4 +1,4 @@
-*MazinGame
+MazinGame
 =========
 A game of maze.
 
@@ -7,7 +7,8 @@ Idea of the game is to find a path through the maze to a location marked by 'X'.
 Requirements
 ------------
 
-Python 2.7 with curses. Developed and tested with Cygwin Mac OS X. Does not work with Python3 nor Windows without Cygwin.
+Python 3.5 with curses. Developed and tested with Cygwin and Mac OS X. 
+Does not work with Python2 or Windows without Cygwin.
 
 Install
 -------
@@ -42,5 +43,7 @@ About
 
 This hobby project was inspired by the book "Mazes for Programmers" by Jamis Buck
 (https://pragprog.com/book/jbmaze/mazes-for-programmers).
+
+Python translations of the maze code is in mazepy-project (https://github.com/samisalkosuo/mazepy).
 
 See http://sami.salkosuo.net/mazingame/ for some background about MazinGame.
