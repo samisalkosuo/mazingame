@@ -18,11 +18,11 @@ version = re.search(
     re.M
     ).group(1)
  
- 
+
 with open("README.rst", "rb") as f:
     long_descr = f.read().decode("utf-8")
- 
- 
+
+
 setup(
     name = projectName,
     packages = find_packages(),
@@ -47,4 +47,3 @@ setup(
     "Programming Language :: Python :: 3 :: Only"
     ]
     )
-    
