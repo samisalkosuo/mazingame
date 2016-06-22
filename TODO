@@ -1,2 +1,5 @@
 -More maze algorithms
 -Save maze screen as text file
+-Add level again (remove in v1.2)
+-Better highscore formatting
+-Refactoring
