@@ -76,6 +76,12 @@ def appendToFile(filename, str):
     file.write("\n")
     file.close()
 
+def appendToLogFile(str):
+    file=open("mazingame_log.txt","a")
+    file.write(str)
+    file.write("\n")
+    file.close()
+
 
 def readFileAsString(filename):
     file=open(filename,"r")
