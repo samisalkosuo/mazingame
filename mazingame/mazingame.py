@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 #add correct version number here
-__version__ = "1.1.0"
+__version__ = "1.2"
 
 from curses import wrapper
 import getpass
@@ -34,49 +34,28 @@ import curses
 import argparse
 import time
 import random
+import json 
+
+from .globals import *
 
 from mazepy import mazepy
 from .utils import utils
+from .highscores import *
 from .gameclasses import Player
 from .gameclasses import Goal
 from .gameclasses import MazingCell
 from .gameclasses import GameGrid
 
-NAME="MazinGame"
-VERSION=__version__
-COPYRIGHT="(C) 2015,2016 Sami Salkosuo"
-LICENSE="Licensed under The MIT License."
-DESCRIPTION=["A game of maze.","Inspired by the book 'Mazes for Programmers' by Jamis Buck","(https://pragprog.com/book/jbmaze/mazes-for-programmers)."]
-
-#environment variable that holds high score file path and name
-MAZINGAME_HIGHSCORE_FILE="MAZINGAME_HIGHSCORE_FILE"
-#default for high score file
-DEFAULT_MAZINGAME_HIGHSCORE_FILE=".mazingame_highscores.sqlite"
-
-#maze
-MAZE_ROWS=20
-MAZE_COLS=25
-
-#game pad screen
-PAD_ROWS=MAZE_ROWS*2+2
-PAD_COLS=MAZE_COLS*4+1
-
-#game visible screen
-SCREEN_ROWS=24
-SCREEN_COLUMNS=80
-
+#command line args
 args=None
-
-#maze algorithms
-MAZE_ALGORITHMS=mazepy.MAZE_ALGORITHMS
-MAZE_ALGORITHMS_DESC=mazepy.MAZE_ALGORITHMS_DESC
 
 def parseCommandLineArgs():
     #parse command line args
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
-    parser.add_argument('-l','--level', nargs=1, type=int, help='Choose level. Any integer.')
-    parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Replay game with specified id.')
-    parser.add_argument('-a','--algorithm', nargs=1, choices=MAZE_ALGORITHMS.keys(),help='Choose maze algorithm: %s. Default is random.' % (",".join(MAZE_ALGORITHMS_DESC)))
+    parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Play again game with specified id.')
+    parser.add_argument('-V','--view', action='store_true', help='View game replay specified with -r option.')
+    parser.add_argument('-a','--algorithm', nargs=1, choices=mazepy.MAZE_ALGORITHMS.keys(),help='Choose maze algorithm: %s. Default is random.' % (",".join(mazepy.MAZE_ALGORITHMS_DESC)))
+    parser.add_argument('-b','--braid', type=float,  metavar='BRAID', default=0.5, help='Select braiding of mazes (0 - 1.0, default is 0.5). Removes deadends, braid=1.0 removes all deadends, braid=0.5 removes about half of deadends.')
     parser.add_argument('-f','--fullscreen', action='store_true', help='Use terminal to show entire maze. But only if terminal size is larger than the maze.')
     parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
     parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
@@ -85,7 +64,6 @@ def parseCommandLineArgs():
     parser.add_argument('-v','--version', action='store_true', help='Show version info.')
     
     global args
-    
     args = parser.parse_args()
 
 def infoWindow(stdscr,line1=None,line2=None,line3=None,line4=None):
@@ -166,36 +144,60 @@ class GameScreen:
             self.level=(int(1000000000*r))
         else:
             self.level=level
+            
         random.seed(self.level)
-        #do it always right after setting random seed, to get same maze when using 
-        #same seed
-        self.grid=GameGrid(MAZE_ROWS,MAZE_COLS,cellClass=MazingCell)
-        self.algorithm=""
-        
-        if level is None and args.algorithm:
-            self.algorithm=args.algorithm[0]
-        else:
-            self.algorithm=random.choice(list(MAZE_ALGORITHMS.keys()))
-        
-        self.grid=mazepy.initMaze(self.grid,self.algorithm)
-    
-        #TODO: add export arg to export maze in some format
-        #utils.appendToFile("maze2.txt",self.grid.asciiStr()) 
-        #set start time after maze has been initialized
-        self.startTime=utils.currentTimeMillis()
 
         name=getpass.getuser()
         self.player=Player(name)
-        playerRow=MAZE_ROWS-1
-        #playerColumn=MAZE_COLS-1#random.randint(0,MAZE_COLS-1)
-        playerColumn=random.randint(0,MAZE_COLS-1)
+
+        #if replay get saved grid
+        if args.replay:
+            replayGameId=args.replay[0]
+            mazeInfo=getMazeInfo(replayGameId)
+            jsonString=mazeInfo["maze_json"]
+
+            self.grid=mazepy.initMazeFromJSON(jsonString,MazingCell)
+            self.algorithm=self.algorithm
+    
+            playerRow=mazeInfo["player_row"]
+            playerColumn=mazeInfo["player_column"]
+            goalRow=mazeInfo["goal_row"]
+            goalColumn=mazeInfo["goal_column"]
+        else:
+            #do it always right after setting random seed, to get same maze when using 
+            #same seed
+            self.grid=GameGrid(MAZE_ROWS,MAZE_COLS,MazingCell)
+            self.algorithm=""
+            if level is None and args.algorithm:
+                self.algorithm=args.algorithm[0]
+            else:
+                self.algorithm=random.choice(list(mazepy.MAZE_ALGORITHMS.keys()))
+        
+            self.grid=mazepy.initMaze(self.grid,self.algorithm)
+
+            braid=args.braid
+            if braid<0:
+                braid=0.0
+            if braid>1.0:
+                braid=1.0
+            self.grid.doBraid(braid)
+
+            playerRow=MAZE_ROWS-1
+            playerColumn=random.randint(0,MAZE_COLS-1)
+            goalRow=random.randint(0,MAZE_ROWS/2)
+            goalColumn=random.randint(0,MAZE_COLS-1)
+        
+        #set start time after maze has been initialized
+        self.startTime=utils.currentTimeMillis()
+
         self.player.row=playerRow
         self.player.column=playerColumn
+        self.player.startingRow=playerRow
+        self.player.startingColumn=playerColumn
+
         currentCell=self.grid.getCell(playerRow,playerColumn)
         self.player.addVisitedCell(currentCell)
 
-        goalRow=random.randint(0,MAZE_ROWS/2)
-        goalColumn=random.randint(0,MAZE_COLS-1)
         goalScreenRow=goalRow*2+1
         goalScreenColumn=(1+goalColumn)*4-2
         self.goal=Goal(goalRow,goalColumn,goalScreenRow,goalScreenColumn)
@@ -335,7 +337,7 @@ class GameScreen:
             if self.replayInProgress==False:
                 infoWindow(self.stdscr,line1="'X' reached!",line3="Score: %d" % self.score)
             else:
-                infoWindow(self.stdscr,line1="Replay complete!",line3="Level: %d" % self.level)
+                infoWindow(self.stdscr,line1="Replay complete!",line3="Game id: %d" % args.replay[0])
             self.gameover=True
 
 
@@ -387,7 +389,8 @@ class GameScreen:
             self.score=math.ceil(currentDefaultStepScore*(baselineTimeMsec/float(elapsedMsec)))
         
         if updateStatusLine==True and self.replayInProgress==False:
-            self.updateStatusLine("Level: %d Moves: %d/%d Elapsed: %.03fsecs Score: %d" % (self.level,self.totalMoves,self.shortestPathLength,self.elapsed,self.score))
+            self.updateStatusLine("P: (%d,%d) X: (%d,%d) Moves: %d/%d Elapsed: %.03fsecs Score: %d" % (self.player.row,self.player.column,self.goal.row,self.goal.column,self.totalMoves,self.shortestPathLength,self.elapsed,self.score))
+            #self.updateStatusLine("Level: %d Moves: %d/%d Elapsed: %.03fsecs Score: %d" % (self.level,self.totalMoves,self.shortestPathLength,self.elapsed,self.score))
 
     def refreshScreen(self):
         #show pad in screen
@@ -518,11 +521,11 @@ def start(stdscr,textList):
         useFullTerminal=True
     gameScreen=GameScreen(stdscr,useFullTerminal)
     level=None
-    if args.level:
-        level=args.level[0]
+    #if args.level:
+    #    level=args.level[0]
 
     gameScreen.updateStatusLine("Welcome to Maze. 'X' marks the spot. Go there.")#" %s" % getHelpLine())
-    if replayGameId is not None:
+    if replayGameId is not None and args.view:
         #replay
         #get game level and moves from db
         (level,moves)=getGameMoves(replayGameId)
@@ -596,16 +599,17 @@ def start(stdscr,textList):
     if cursorVisibility>-1:
         curses.curs_set(cursorVisibility)
 
-    if replayGameId is None:
+    if not (replayGameId is not None and args.view):
         if gameScreen.gameover==True:
             cheat=False
             if args.showpath or args.showmaze:
                 cheat=True
-            gameid=saveScores(gameScreen.player,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,cheat,gameScreen.algorithm)
+            gameid=saveScores(args,__version__,gameScreen.grid,gameScreen.player,gameScreen.goal,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,cheat,gameScreen.grid.algorithm_key,args.braid)
             textList.append("'X' reached:")
             textList.append("  Game ID  : %d" % gameid)
-            textList.append("  Level    : %d" % gameScreen.level)
-            textList.append("  Algorithm: %s" % MAZE_ALGORITHMS[gameScreen.algorithm])
+            #textList.append("  Level    : %d" % gameScreen.level)
+            textList.append("  Algorithm: %s" % gameScreen.grid.algorithm)
+            textList.append("  Braiding : %f" % args.braid)
             textList.append("  Moves    : %d/%d" % (gameScreen.totalMoves,gameScreen.shortestPathLength))
             textList.append("  Elapsed  : %.03fsecs" % gameScreen.elapsed)
             textList.append("  Score    : %d" % gameScreen.score)
@@ -614,162 +618,19 @@ def start(stdscr,textList):
             if args.showmaze:
                 textList.append("  --showmaze cheat was active.")
         else:
-            textList.append("'X' not reached:")
-            textList.append("  Level  : %d" % gameScreen.level)
+            textList.append("'X' not reached.")
+            #textList.append("  Level  : %d" % gameScreen.level)
 
 
-def getGameMoves(gameId):
-    dbFile=getHighScoreFile()
-
-    (conn,cursor)=utils.openDatabase(dbFile)
-    cursor.execute("select level from highscores where gameid=%d" % gameId)
-    level=cursor.fetchone()[0]
-    moves=[]
-    for row in cursor.execute("select row,column from gamemoves where gameid=%d order by move_index" % gameId):
-        moves.append((row['row'],row['column']))
-    utils.closeDatabase(conn)
-
-    return (level,moves)
-
-def getHighScoreFile():
-    dbFile=os.environ.get(MAZINGAME_HIGHSCORE_FILE)
-    if dbFile==None:
-        from os.path import expanduser
-        HOMEDIR = expanduser("~")
-        dbFile="%s/%s" % (HOMEDIR,DEFAULT_MAZINGAME_HIGHSCORE_FILE)
-    #utils.debug(dbFile)
-    return dbFile
-
-def saveScores(player,level,score,moves,shortestPath,elapsed,cheat,algorithm):
-    #TODO: change high score file to text file and use inmemory sqlite to show scores
-    #similar to CLI Password Manager
-    dbFile=getHighScoreFile()
-
-    timestamp=utils.currentTimeISO8601()
-    (conn,cursor)=utils.openDatabase(dbFile)
-
-    #SQLite uses boolean value '1' for true and '0' false
-    cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat integer,version text)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, row integer, column integer)''')
-
-    values = (timestamp,score,level,elapsed,moves,shortestPath,cheat,player.name,algorithm,VERSION)
-    cursor.execute('insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version) values (?,?,?,?,?,?,?,?,?,?)', values)
-    #save player moves for replay
-    values= (timestamp,)
-    cursor.execute("select gameid from highscores where timestamp=?",values)
-    gameid=cursor.fetchone()[0]
-    moveIndex=0
-
-    for cell in player.visitedCells:
-        values = (gameid,moveIndex,cell.row,cell.column)
-        cursor.execute('insert into gamemoves (gameid,move_index,row,column) values (?,?,?,?)', values)
-        moveIndex=moveIndex+1
-
-    conn.commit()
-    utils.closeDatabase(conn)
-    return gameid
-
-def listHighScores():
-    dbFile=getHighScoreFile()
-    (conn,cursor)=utils.openDatabase(dbFile)
-
-    level=None
-    algorithm=None
-
-    cheat=False
-    if args.showpath or args.showmaze or args.cheat:
-        cheat=True
-
-    if args.level:
-        level=args.level[0]
-    if args.algorithm:
-        algorithm=args.algorithm[0]
-    
-    values= None
-    sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version from highscores"
-    if level is not None:
-        sql=sql+" where level=%d" % level
-    if level is not None:
-        sql=sql+" and " 
-    else:
-        sql=sql+" where " 
-    if cheat==True:
-        sql=sql+" (cheat=0 or cheat=1)"
-    else:
-        sql=sql+" cheat=0"
-    if algorithm is not None:
-        sql=sql+" and algorithm='%s'" % algorithm
-
-
-    sql=sql+" order by score desc"
-    #print(sql)
-    scores=[]
-    rank=1
-    #TODO: refactor code below
-    #better formatting
-    scores.append(["RANK","SCORE","LEVEL","ALGORITHM","MOVES","ELAPSED SECS","GAMEID","PLAYER","VERSION","TIME"])
-    for row in cursor.execute(sql):
-        scoreRow=[]
-        scoreRow.append(rank)
-        rank=rank+1
-        cheat=row['cheat']
-        score=row['score']
-        if cheat==1:
-            score="%d (cheat)" % score
-        scoreRow.append(score)
-        scoreRow.append(row['level'])
-        scoreRow.append(row['algorithm'])
-        scoreRow.append("%d/%d" % (row['moves'],row['shortest_path_moves']))
-        scoreRow.append(row['elapsed_secs'])
-        scoreRow.append(row['gameid'])
-        scoreRow.append(row['player_name'])
-        scoreRow.append(row['version'])
-        scoreRow.append(row['timestamp'])
-        scores.append(scoreRow)
-
-    output=[]
-
-    rankColumnWidth=5
-    output.append(scores[0][0].ljust(rankColumnWidth))
-    output.append(" ")
-    columnWidth=13
-    for c in scores[0][1:]:
-        s=str(c)
-        output.append(s.ljust(columnWidth))
-        output.append(" ")
-    print("".join(output))
-    output=[]
-    output.append("-"*rankColumnWidth)
-    output.append(" ")
-    columnWidth=13
-    for c in scores[0][1:]:
-        output.append("-"*columnWidth)
-        output.append(" ")
-    print("".join(output))
-    
-    for row in scores[1:]:
-        output=[]
-        first=True
-        for c in row:
-            s=str(c)           
-            if first:
-                output.append(s.ljust(rankColumnWidth))
-                first=False
-            else:
-                output.append(s.ljust(columnWidth))
-            output.append(" ")
-        print("".join(output))
-    
-    utils.closeDatabase(conn)
 
 def main():
     try:
         parseCommandLineArgs()
         if args.highscores:
-            listHighScores()
+            listHighScores(args)
             return
         if args.version:
-            print("%s v%s" % (NAME,VERSION))
+            print("%s v%s" % (NAME,__version__))
             print("")
             print("\n".join(DESCRIPTION))
             print("")
