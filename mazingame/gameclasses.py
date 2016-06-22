@@ -31,7 +31,8 @@ class Player:
         #row and column are location in maze grid
         self.row=0
         self.column=0
-
+        self.startingRow=0
+        self.startingColumn=0
         #screeenRow and screenColumn are location in screen
         self.screenRow=0
         self.screenColumn=0
