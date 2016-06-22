@@ -29,7 +29,7 @@ setup(
     entry_points = {
         "console_scripts": ['%s = %s.%s:main' % (projectName,projectName,projectName)]
         },
-    install_requires = ['mazepy>=0.1'],
+    install_requires = ['mazepy>=0.2'],
     version = version,
     description = description,
     long_description = long_descr,
