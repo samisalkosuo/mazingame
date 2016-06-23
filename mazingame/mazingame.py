@@ -419,8 +419,7 @@ class GameScreen:
         self.calculateScore()
 
         if self.replayInProgress==True:
-            self.updateStatusLine("REPLAY Level: %d Moves: %d/%d " % (self.level,self.totalMoves,self.shortestPathLength))
-
+            self.updateStatusLine("REPLAY Game ID: %d Moves: %d/%d " % (args.replay[0],self.totalMoves,self.shortestPathLength))
 
     def renderCell(self,cell,centerRow,centerColumn,recursion=True):
     
