@@ -1,3 +1,12 @@
+Version 1.2 (15.06.2016)
+
+- Requires mazepy v0.2.
+- Added braiding mazes.
+- Removed --level option.
+- Added --view option to view replay of existing game.
+- Changed --replay option so that you can play the maze again.
+- Refactoring.
+
 Version 1.1.0 (13.06.2016)
 
 - Moved to Python3 (Python2 no longer supported).
