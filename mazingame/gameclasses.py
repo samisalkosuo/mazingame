@@ -63,49 +63,7 @@ class Goal:
 
 
 class MazingCell(mazepy.Cell):
-
-    content="   "
-
-    def setContent(self,content):
-        if content==None or len(content)==0:
-            self.content="   "
-        if len(content)==1:
-            self.content=" %s " % content
-        if len(content)==2:
-            self.content="%s " % content
-        if len(content)==3:
-            self.content=content
-        if len(content)>3:
-            self.content=content[0:3]
-
-
-    def getContent(self):       
-        return self.content
-
-    def toString(self):
-        output="[%d,%d," % (self.row,self.column)
-        if self.linked(self.north):
-            output=output+"1"
-        else:
-            output=output+"0"
-        output=output+","
-        if self.linked(self.east):
-            output=output+"1"
-        else:
-            output=output+"0"
-        output=output+","
-        if self.linked(self.south):
-            output=output+"1"
-        else:
-            output=output+"0"
-        output=output+","
-        if self.linked(self.west):
-            output=output+"1"
-        else:
-            output=output+"0"
-        output=output+"]"
-
-        return output
+    pass
 
 class GameGrid(mazepy.Grid):
 

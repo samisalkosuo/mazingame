@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 #add correct version number here
-__version__ = "1.2"
+__version__ = "1.3"
 
 from curses import wrapper
 import getpass
@@ -367,6 +367,9 @@ class GameScreen:
 
     def calculateScore(self,updateStatusLine=True):
         #elapsed since start
+        if args.view:
+            #do not calculate score if replaying
+            return
         elapsedMsec=(utils.currentTimeMillis() - self.startTime)
         self.elapsed=elapsedMsec/1000.0
         currentTotalMoves=float(self.totalMoves)
