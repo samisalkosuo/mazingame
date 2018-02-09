@@ -33,9 +33,9 @@ Snapshot from an actual game::
 
 ## Requirements
 
-Docker runtime. If you ask why? Because tt makes distribution simple and life easier.
+[Docker runtime](https://www.docker.com/get-docker). If you ask why? Because it makes distribution simple and life easier :-).
 
-If using sources, Python 3.x with curses and mazepy. Does not work with Python2 or Windows without Cygwin.
+If using sources, Python 3.x with curses and [mazepy](https://github.com/samisalkosuo/mazepy). Does not work with Python2 or Windows without Cygwin.
 
 ## Install and usage
 
@@ -43,12 +43,16 @@ Install from Dockerhub:
 
 - docker pull kazhar/mazingame
 
+Use
+
 
 ### pip
 
-There remains version in pip. Install from pip:
+There is a version in pip. Install from pip:
 
 - **pip install mazingame**.
+
+Note that this is not updated anymore.
 
 ## Instructions
 
