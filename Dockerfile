@@ -21,6 +21,10 @@ VOLUME [ "/mazingame/gamedata" ]
 
 COPY scripts/run_mazingame.sh ./
 
+#set correct permissions
+RUN chmod 755 *.sh
+
+
 #note: to use full screen -f - make sure that terminal window is large, otherwise error occurs
 ENTRYPOINT ["/bin/bash", "-c", "./run_mazingame.sh \"$@\"", "--"]
 
