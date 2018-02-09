@@ -1,5 +1,5 @@
-MazinGame
-=========
+# MazinGame
+
 A game of maze.
 
 Idea of the game is to find a path through the maze to a location marked by 'X'.
@@ -31,19 +31,26 @@ Snapshot from an actual game::
 	+   +   +---+---+   +---+---+   +---+---+   +---+---+   +---+   +   +   +---+   +
 	P: (9,2) X: (8,2) Moves: 35/36 Elapsed: 12.670secs Score: 8288
 
-Requirements
-------------
+## Requirements
 
-Python 3.5 with curses and mazepy. Developed and tested with Cygwin and Mac OS X. 
-Does not work with Python2 or Windows without Cygwin.
+Docker runtime. If you ask why? Because tt makes distribution simple and life easier.
 
-Install
--------
+If using sources, Python 3.x with curses and mazepy. Does not work with Python2 or Windows without Cygwin.
 
-Install latest version: **pip install mazingame**.
+## Install and usage
 
-Instructions
-------------
+Install from Dockerhub:
+
+- docker pull kazhar/mazingame
+
+
+### pip
+
+There remains version in pip. Install from pip:
+
+- **pip install mazingame**.
+
+## Instructions
 
 You will start at some location in the bottom of the maze. 'X' is somewhere
 nearer the top of the maze.
@@ -65,8 +72,7 @@ And a few more.
 Note: database in high score file may change from version to version, if you
 get SQLite error when saving high scores, delete your high score file.
 
-About
------
+## About
 
 This hobby project was inspired by the book "Mazes for Programmers" by Jamis Buck
 (https://pragprog.com/book/jbmaze/mazes-for-programmers).
