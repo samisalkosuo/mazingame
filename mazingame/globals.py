@@ -30,7 +30,7 @@ DESCRIPTION=["A game of maze.","Inspired by the book 'Mazes for Programmers' by 
 #environment variable that holds high score file path and name
 MAZINGAME_HIGHSCORE_FILE="MAZINGAME_HIGHSCORE_FILE"
 #default for high score file
-DEFAULT_MAZINGAME_HIGHSCORE_FILE=".mazingame_highscores.sqlite"
+DEFAULT_MAZINGAME_HIGHSCORE_FILE="mazingame_highscores.sqlite"
 
 #maze
 MAZE_ROWS=20

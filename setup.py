@@ -3,7 +3,16 @@
  
 """setup.py: setuptools control."""
  
- 
+#convert markdown to rst
+import sys
+try:
+    import pypandoc
+    long_descr = pypandoc.convert('README.md', 'rst')
+except(IOError, ImportError):
+    print("Error converting MD to rst.")
+    long_descr = open('README.md').read()
+    sys.exit(1)
+
 import re
 from setuptools import setup, find_packages
 
@@ -19,8 +28,8 @@ version = re.search(
     ).group(1)
  
 
-with open("README.rst", "rb") as f:
-    long_descr = f.read().decode("utf-8")
+#with open("README.rst", "rb") as f:
+#    long_descr = f.read().decode("utf-8")
 
 
 setup(

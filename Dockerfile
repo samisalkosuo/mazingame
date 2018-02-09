@@ -1,12 +1,14 @@
 
 FROM python:3.6.4
 
-#install mazepy requirement
-RUN git clone https://github.com/samisalkosuo/mazepy.git \
-    && cd mazepy \
-    && python setup.py install 
-
 WORKDIR /mazingame
+
+#install mazepy requirement and makes gamedata-directory that holds game scores
+RUN pip install mazepy && mkdir gamedata
+#git clone https://github.com/samisalkosuo/mazepy.git \
+#    && cd mazepy \
+#    && python setup.py install 
+
 
 #copy mazingame files
 COPY mazingame/ ./mazingame/
@@ -15,10 +17,11 @@ COPY mazingame-runner.py ./
 #set TERM so that console works correctly
 ENV TERM xterm 
 
-#full screen: make sure that terminal window is large, otherwise error occurs
-#CMD ["python","mazingame-runner.py","-f"]
+VOLUME [ "/mazingame/gamedata" ]
 
-#no full screen
-CMD ["python","mazingame-runner.py"]
+COPY scripts/run_mazingame.sh ./
 
-CMD ["/bin/bash"]  
+#note: to use full screen -f - make sure that terminal window is large, otherwise error occurs
+ENTRYPOINT ["/bin/bash", "-c", "./run_mazingame.sh \"$@\"", "--"]
+
+#CMD ["/bin/bash"]  

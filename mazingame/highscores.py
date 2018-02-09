@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 
-# Copyright (c) 2015,2016 Sami Salkosuo
+# Copyright (c) 2015,2018 Sami Salkosuo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,8 @@ def getGameMoves(gameId):
 
 def getMazeInfo(gameId):
     dbFile=getHighScoreFile()
-
+    if dbFile is None:
+        return -1
     (conn,cursor)=utils.openDatabase(dbFile)
     cursor.execute("select maze_json,player_row,player_column,goal_row,goal_column from mazes where gameid=%d" % gameId)
     row=cursor.fetchone()
@@ -55,11 +56,17 @@ def getMazeInfo(gameId):
     return result
 
 def getHighScoreFile():
+
+    gameDataDir="/mazingame/gamedata"
+    if os.path.exists(gameDataDir)==False:
+        #print("Game data dir '%s' does not exist. This program is meant to run using Docker.")
+        #print("Scores not saved.")
+        return None
     dbFile=os.environ.get(MAZINGAME_HIGHSCORE_FILE)
     if dbFile==None:
         from os.path import expanduser
-        HOMEDIR = expanduser("~")
-        dbFile="%s/%s" % (HOMEDIR,DEFAULT_MAZINGAME_HIGHSCORE_FILE)
+        #HOMEDIR = expanduser("~")
+        dbFile="%s/%s" % (gameDataDir,DEFAULT_MAZINGAME_HIGHSCORE_FILE)
     #utils.debug(dbFile)
     return dbFile
 
@@ -73,6 +80,8 @@ def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elap
         return
 
     dbFile=getHighScoreFile()
+    if dbFile is None:
+        return -1
 
     timestamp=utils.currentTimeISO8601()
     (conn,cursor)=utils.openDatabase(dbFile)
@@ -85,8 +94,8 @@ def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elap
         replaygameid=args.replay[0]
     else:
         replaygameid=0
-    values = (timestamp,score,level,elapsed,moves,shortestPath,cheat,player.name,algorithm,version,braid,replaygameid)
-    cursor.execute('insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version,braid,replay_of_gameid) values (?,?,?,?,?,?,?,?,?,?,?,?)', values)
+    values = (timestamp,score,level,elapsed,moves,shortestPath,cheat,player.name,algorithm,version,braid,replaygameid,level)
+    cursor.execute('insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version,braid,replay_of_gameid,level) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
     #save player moves for replay
     values= (timestamp,)
     cursor.execute("select gameid from highscores where timestamp=?",values)
@@ -123,6 +132,11 @@ def selectFromHighScores(gameid, columnName):
 
 def listHighScores(args):
     dbFile=getHighScoreFile()
+
+    if dbFile is None or os.path.exists(dbFile)==False:
+        print("No high score file.")
+        return
+
     (conn,cursor)=utils.openDatabase(dbFile)
 
     level=None
@@ -132,14 +146,14 @@ def listHighScores(args):
     if args.showpath or args.showmaze or args.cheat:
         cheat=True
 
-    #if args.level:
-    #    level=args.level[0]
+    if args.level:
+        level=args.level[0]
     if args.algorithm:
         algorithm=args.algorithm[0]
     
     values= None
     #sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version,braid from highscores"
-    sql="select gameid,timestamp,score,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version,braid,replay_of_gameid from highscores"
+    sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version,braid,replay_of_gameid from highscores"
     if level is not None:
         sql=sql+" where level=%d" % level
     if level is not None:
@@ -158,10 +172,9 @@ def listHighScores(args):
     #print(sql)
     scores=[]
     rank=1
-    #TODO: refactor code below
-    #better formatting
-    #scores.append(["RANK","SCORE","LEVEL","ALGORITHM/BRAID","MOVES","ELAPSED SECS","GAMEID","PLAYER","VERSION","TIME"])
-    scores.append(["RANK","SCORE","GAMEID (REPL. OF)","ALGORITHM/BRAID","MOVES","ELAPSED SECS","PLAYER","VERSION","TIME"])
+    #TODO: refactor code below, better formatting
+    #scores.append(["RANK","SCORE","LEVEL","GAMEID (REPL. OF)","ALGORITHM/BRAID","MOVES","ELAPSED SECS","PLAYER","VERSION","TIME"])
+    scores.append(["RANK","SCORE","LEVEL","GAMEID (REPL. OF)","ALGORITHM/BRAID","MOVES","ELAPSED SECS","VERSION","TIME"])
     for row in cursor.execute(sql):
         scoreRow=[]
         scoreRow.append(rank)
@@ -171,16 +184,16 @@ def listHighScores(args):
         if cheat==1:
             score="%d (cheat)" % score
         scoreRow.append(score)
+        scoreRow.append(row['level'])
         replaygameid=row['replay_of_gameid']
         if replaygameid!=0:
             scoreRow.append("%d (%d)" % (row['gameid'],replaygameid))
         else:
             scoreRow.append(row['gameid'])
-        #scoreRow.append(row['level'])
         scoreRow.append("%s/%s" % (row['algorithm'], row['braid']))
         scoreRow.append("%d/%d" % (row['moves'],row['shortest_path_moves']))
         scoreRow.append(row['elapsed_secs'])
-        scoreRow.append(row['player_name'])
+        #scoreRow.append(row['player_name'])
         scoreRow.append(row['version'])
         scoreRow.append(row['timestamp'])
         scores.append(scoreRow)

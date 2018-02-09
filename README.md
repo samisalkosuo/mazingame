@@ -5,7 +5,7 @@ A game of maze.
 Idea of the game is to find a path through the maze to a location marked by 'X'.
 
 Snapshot from an actual game (if you are seeing this in pypi.python.org you may 
-not see it correctly, got to GitHub page to see it)::
+not see it correctly, so go to GitHub page to see it)::
 
 	+   +   +   +   +   +   +   +   +---+   +---+---+---+   +   +   +   +---+   +---+
 	|   |   |   |   |   |   |   |       |                       |           |   |
@@ -44,8 +44,19 @@ Install from Dockerhub:
 
 - docker pull kazhar/mazingame
 
-Use
+Using docker image:
 
+- Run using command:
+  - *docker run -it --rm kazhar/mazingame [options]"
+
+- Set your own directory for highscores:
+  - *docker run -it --rm -v &lt;path_to_local_dir>:/mazingame/gamedata kazhar/mazingame [options]"
+
+About options:
+
+- *-it* runs Docker container with interactive terminal.
+- *--rm* removes image after use. No need to keep it.
+- *-v* maps local directory to directory used by the program.
 
 ## Install and usage - pip
 
@@ -53,24 +64,25 @@ There is a version in pip. Install from pip:
 
 - **pip install mazingame**.
 
-Note that this is not regularly updated
+Note that this is not regularly updated.
 
 ## Instructions
 
 You will start at some location in the bottom of the maze. 'X' is somewhere
 nearer the top of the maze.
-Move using cursor keys or 'w','a','s','d'.
-Quit pressing 'q' or Ctrl-C.
 
-When, or if, you reach 'X', the ending score is saved to SQLite database.
-The default highscore file location is $HOME/.mazingame_highscores.sqlite.
-Use environment variable MAZINGAME_HIGHSCORE_FILE to set another file.
+- Move using cursor keys or 'w', 'a', 's', 'd'.
+- Quit pressing 'q' or Ctrl-C.
+
+When, or if, you reach 'X', the ending score is saved to SQLite database */mazingame/gamedata/mazingame_highscores.sqlite*.
+Use Docker volume to point */mazingame/gamedata* to your own directory.
 
 Command line options include:
-	-f, --fullscreen      Use terminal to show entire maze. But only if terminal size is larger than the maze.
-	--showpath            Show shortest path. Remember: this is cheating.
-	--showmaze            Show entire maze. Remember: this is cheating.
-	-hs, --highscores     Show high scores.
+
+- -f, --fullscreen      Use terminal to show entire maze. But only if terminal size is larger than the maze.
+- --showpath            Show shortest path. Remember: this is cheating.
+- --showmaze            Show entire maze. Remember: this is cheating.
+- -hs, --highscores     Show high scores.
 
 And a few more.
 
@@ -79,9 +91,8 @@ get SQLite error when saving high scores, delete your high score file.
 
 ## About
 
-This hobby project was inspired by the book "Mazes for Programmers" by Jamis Buck
-(https://pragprog.com/book/jbmaze/mazes-for-programmers).
+This hobby project was inspired by the book ["Mazes for Programmers" by Jamis Buck](https://pragprog.com/book/jbmaze/mazes-for-programmers).
 
-Python translations of the maze code is in mazepy-project (https://github.com/samisalkosuo/mazepy).
+Python translations of the maze code is in [mazepy-project](https://github.com/samisalkosuo/mazepy).
 
-See http://sami.salkosuo.net/mazingame/ for some background about MazinGame.
+See [http://sami.salkosuo.net/mazingame/](http://sami.salkosuo.net/mazingame/) for some background about MazinGame.

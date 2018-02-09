@@ -3,7 +3,7 @@
 #
 # The MIT License (MIT)
 
-# Copyright (c) 2015,2016 Sami Salkosuo
+# Copyright (c) 2015,2018 Sami Salkosuo
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 #add correct version number here
-__version__ = "1.4"
+__version__ = "1.5"
 
 from curses import wrapper
 import getpass
@@ -52,6 +52,7 @@ args=None
 def parseCommandLineArgs():
     #parse command line args
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
+    parser.add_argument('-l','--level', nargs=1, type=int, metavar='LEVELID',help='Maze level. This integer is a random seed to create the maze.')
     parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Play again game with specified id.')
     parser.add_argument('-V','--view', action='store_true', help='View game replay specified with -r option.')
     parser.add_argument('-a','--algorithm', nargs=1, choices=mazepy.MAZE_ALGORITHMS.keys(),help='Choose maze algorithm: %s. Default is random.' % (",".join(mazepy.MAZE_ALGORITHMS_DESC)))
@@ -523,8 +524,8 @@ def start(stdscr,textList):
         useFullTerminal=True
     gameScreen=GameScreen(stdscr,useFullTerminal)
     level=None
-    #if args.level:
-    #    level=args.level[0]
+    if args.level:
+        level=args.level[0]
 
     gameScreen.updateStatusLine("Welcome to Maze. 'X' marks the spot. Go there.")#" %s" % getHelpLine())
     if replayGameId is not None and args.view:
@@ -608,7 +609,10 @@ def start(stdscr,textList):
                 cheat=True
             gameid=saveScores(args,__version__,gameScreen.grid,gameScreen.player,gameScreen.goal,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,cheat,gameScreen.grid.algorithm_key,args.braid)
             textList.append("'X' reached:")
-            textList.append("  Game ID  : %d" % gameid)
+            if gameid == -1:
+                textList.append("  Game ID  : %d (score not saved, MazinGame is meant to be run as Docker image)" % gameid)            
+            else:
+                textList.append("  Game ID  : %d" % gameid)
             #textList.append("  Level    : %d" % gameScreen.level)
             textList.append("  Algorithm: %s" % gameScreen.grid.algorithm)
             textList.append("  Braiding : %f" % args.braid)
@@ -639,6 +643,14 @@ def main():
             print(COPYRIGHT)
             print(LICENSE)
             return
+        if args.replay:
+            replayGameId=args.replay[0]
+            mazeInfo=getMazeInfo(replayGameId)
+            if mazeInfo is None:
+                print("Can not replay game. No game info.")
+                return
+
+
         textList=[]
         wrapper(start,textList)
         if textList:
