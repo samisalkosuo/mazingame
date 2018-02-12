@@ -57,7 +57,7 @@ def parseCommandLineArgs():
     parser.add_argument('-V','--view', action='store_true', help='View game replay specified with -r option.')
     parser.add_argument('-a','--algorithm', nargs=1, choices=mazepy.MAZE_ALGORITHMS.keys(),help='Choose maze algorithm: %s. Default is random.' % (",".join(mazepy.MAZE_ALGORITHMS_DESC)))
     parser.add_argument('-b','--braid', type=float,  metavar='BRAID', default=0.5, help='Select braiding of mazes (0 - 1.0, default is 0.5). Removes deadends, braid=1.0 removes all deadends, braid=0.5 removes about half of deadends.')
-    parser.add_argument('-f','--fullscreen', action='store_true', help='Use terminal to show entire maze. But only if terminal size is larger than the maze.')
+    parser.add_argument('-nf','--nofullscreen', action='store_true', help='Do not use full screen. Default is to show entire maze in terminal, but only if terminal size is larger than the maze.')
     parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
     parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
     parser.add_argument('-hs','--highscores', action='store_true', help='Show high scores. Specify --level to select scores for the level and --showpath to incude cheat scores. Use %s environment variable to set high score file (default is $HOME/%s).' % (MAZINGAME_HIGHSCORE_FILE,DEFAULT_MAZINGAME_HIGHSCORE_FILE))
@@ -494,6 +494,15 @@ class GameScreen:
 
 
 def start(stdscr,textList):
+    
+    height,width = stdscr.getmaxyx()
+    if height < FULLSCREEN_MIN_ROWS:
+        input("Console screen is too small: %d rows. Full screen needs minimum of %d rows. CTRL-C to exit." % (height,FULLSCREEN_MIN_ROWS))
+        return
+    if width < FULLSCREEN_MIN_COLS:
+        input("Console screen is too small: %d columns. Full screen needs minimum of %d columns. CTRL-C to exit." % (width,FULLSCREEN_MIN_COLS))
+        return
+
     try:
         cursorVisibility=curses.curs_set(0)
     except:
@@ -519,9 +528,9 @@ def start(stdscr,textList):
 
     stdscr.clear()
 
-    useFullTerminal=False
-    if args.fullscreen:
-        useFullTerminal=True
+    useFullTerminal=True
+    if args.nofullscreen:
+        useFullTerminal=False
     gameScreen=GameScreen(stdscr,useFullTerminal)
     level=None
     if args.level:
@@ -613,7 +622,7 @@ def start(stdscr,textList):
                 textList.append("  Game ID  : %d (score not saved, MazinGame is meant to be run as Docker image)" % gameid)            
             else:
                 textList.append("  Game ID  : %d" % gameid)
-            #textList.append("  Level    : %d" % gameScreen.level)
+            textList.append("  Level    : %d" % gameScreen.level)
             textList.append("  Algorithm: %s" % gameScreen.grid.algorithm)
             textList.append("  Braiding : %f" % args.braid)
             textList.append("  Moves    : %d/%d" % (gameScreen.totalMoves,gameScreen.shortestPathLength))
@@ -649,12 +658,11 @@ def main():
             if mazeInfo is None:
                 print("Can not replay game. No game info.")
                 return
-
-
+        
         textList=[]
         wrapper(start,textList)
         if textList:
-            print("\n".join(textList))
+            print("\n".join(textList))        
     except KeyboardInterrupt:
         #ignore ctrl-c
         pass

@@ -49,7 +49,7 @@ Using docker image:
 - Run using command:
   - *docker run -it --rm kazhar/mazingame [options]*
 
-- Set your own directory for highscores:
+- Set your own directory for highscore/game replay file:
   - *docker run -it --rm -v &lt;path_to_local_dir>:/mazingame/gamedata kazhar/mazingame [options]*
 
 About options:
