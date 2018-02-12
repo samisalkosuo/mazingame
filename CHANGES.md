@@ -1,3 +1,7 @@
+## Version 1.6 (12.02.2018)
+
+- Refactoring. Moved code to files.
+
 ## Version 1.5 (12.02.2018)
 
 - Added -nf, --nofullscreen option to disable full screen.
