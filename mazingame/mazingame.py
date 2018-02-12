@@ -49,6 +49,9 @@ from .gameclasses import GameGrid
 #command line args
 args=None
 
+#screenshot index
+screenshotIndex=0
+
 def parseCommandLineArgs():
     #parse command line args
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
@@ -313,6 +316,13 @@ class GameScreen:
         self.updatePad()
 
 
+    def takeScreenshot(self):
+        #take screenshot to specified directory
+        #hardcoded to use Cygwin
+        global screenshotIndex
+        os.system('/usr/bin/import.exe -window "/cygdrive/c/Dropbox/git/mazingame" /cygdrive/c/Dropbox/git/mazingame/temp/image_%03d.png' % screenshotIndex)
+        screenshotIndex=screenshotIndex+1
+
     def addCharacter(self,row,column,chr):
         #add character to game screen
         #note: this should be only place where actual addstr takes place
@@ -421,6 +431,8 @@ class GameScreen:
         playerRow=self.player.row
         playerColumn=self.player.column
         self.calculateScore()
+        #take screenshot
+        #self.takeScreenshot()
 
         if self.replayInProgress==True:
             self.updateStatusLine("REPLAY Game ID: %d Moves: %d/%d " % (args.replay[0],self.totalMoves,self.shortestPathLength))
