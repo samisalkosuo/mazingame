@@ -50,7 +50,7 @@ Using docker image:
   - *docker run -it --rm kazhar/mazingame [options]*
 
 - Set your own directory for highscore/game replay file:
-  - *docker run -it --rm -v &lt;path_to_local_dir>:/mazingame/gamedata kazhar/mazingame [options]*
+  - *docker run -it --rm -v &lt;path_to_local_dir>:/data kazhar/mazingame [options]*
 
 About options:
 
@@ -74,8 +74,8 @@ nearer the top of the maze.
 - Move using cursor keys or 'w', 'a', 's', 'd'.
 - Quit pressing 'q' or Ctrl-C.
 
-When, or if, you reach 'X', the ending score is saved to SQLite database */mazingame/gamedata/mazingame_highscores.sqlite*.
-Use Docker volume to point */mazingame/gamedata* to your own directory.
+When, or if, you reach 'X', the ending score is saved to SQLite database */data/mazingame_highscores.sqlite*.
+Use Docker volume to point */data* to your own directory.
 
 Command line options include:
 

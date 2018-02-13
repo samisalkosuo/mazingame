@@ -1,5 +1,6 @@
-## Version 1.6 (12.02.2018)
+## Version 1.6 (13.02.2018)
 
+- Changed data dir /mazingame/gamedata to /data.
 - Refactoring. Moved code to files.
 
 ## Version 1.5 (12.02.2018)
