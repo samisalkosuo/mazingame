@@ -57,7 +57,7 @@ def getMazeInfo(gameId):
 
 def getHighScoreFile():
 
-    gameDataDir="/mazingame/gamedata"
+    gameDataDir="/data"
     if os.path.exists(gameDataDir)==False:
         #print("Game data dir '%s' does not exist. This program is meant to run using Docker.")
         #print("Scores not saved.")
