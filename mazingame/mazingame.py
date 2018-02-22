@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 #add correct version number here
-__version__ = "1.6"
+__version__ = "1.7"
 
 from curses import wrapper
 import getpass
@@ -56,9 +56,6 @@ def parseCommandLineArgs():
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
     parser.add_argument('-l','--level', nargs=1, type=int, metavar='LEVELID',help='Maze level. This integer is a random seed to create the maze.')
     parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Play again game with specified id.')
-    parser.add_argument('-V','--view', action='store_true', help='View game replay specified with -r option.')
-    parser.add_argument('-a','--algorithm', nargs=1, choices=mazepy.MAZE_ALGORITHMS.keys(),help='Choose maze algorithm: %s. Default is random.' % (",".join(mazepy.MAZE_ALGORITHMS_DESC)))
-    parser.add_argument('-b','--braid', type=float,  metavar='BRAID', default=0.5, help='Select braiding of mazes (0 - 1.0, default is 0.5). Removes deadends, braid=1.0 removes all deadends, braid=0.5 removes about half of deadends.')
     parser.add_argument('-nf','--nofullscreen', action='store_true', help='Do not use full screen. Default is to show entire maze in terminal, but only if terminal size is larger than the maze.')
     parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
     parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
@@ -118,7 +115,7 @@ def start(stdscr,textList):
         level=args.level[0]
 
     gameScreen.updateStatusLine("Welcome to Maze. 'X' marks the spot. Go there.")#" %s" % getHelpLine())
-    if replayGameId is not None and args.view:
+    if replayGameId is not None:
         #replay
         #get game level and moves from db
         (level,moves)=getGameMoves(replayGameId)
@@ -192,12 +189,12 @@ def start(stdscr,textList):
     if cursorVisibility>-1:
         curses.curs_set(cursorVisibility)
 
-    if not (replayGameId is not None and args.view):
+    if not (replayGameId is not None):
         if gameScreen.gameover==True:
             cheat=False
             if args.showpath or args.showmaze:
                 cheat=True
-            gameid=saveScores(args,__version__,gameScreen.grid,gameScreen.player,gameScreen.goal,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,cheat,gameScreen.grid.algorithm_key,args.braid)
+            gameid=saveScores(args,__version__,gameScreen.grid,gameScreen.player,gameScreen.goal,gameScreen.level,gameScreen.score,gameScreen.totalMoves,gameScreen.shortestPathLength,gameScreen.elapsed,cheat,gameScreen.grid.algorithm_key)
             textList.append("'X' reached:")
             if gameid == -1:
                 textList.append("  Game ID  : %d (score not saved, MazinGame is meant to be run as Docker image)" % gameid)            
@@ -205,7 +202,7 @@ def start(stdscr,textList):
                 textList.append("  Game ID  : %d" % gameid)
             textList.append("  Level    : %d" % gameScreen.level)
             textList.append("  Algorithm: %s" % gameScreen.grid.algorithm)
-            textList.append("  Braiding : %f" % args.braid)
+            #textList.append("  Braiding : %f" % args.braid)
             textList.append("  Moves    : %d/%d" % (gameScreen.totalMoves,gameScreen.shortestPathLength))
             textList.append("  Elapsed  : %.03fsecs" % gameScreen.elapsed)
             textList.append("  Score    : %d" % gameScreen.score)

@@ -71,12 +71,15 @@ def getHighScoreFile():
     return dbFile
 
 
-def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elapsed,cheat,algorithm,braid):
+def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elapsed,cheat,algorithm):
     #TODO: change high score file to text file and use inmemory sqlite to show scores
     #similar to CLI Password Manager
 
+    #braid no longer option, hardcoded to 0.5
+    braid=0.5
     #do not save score if viewing replay
-    if args.view:
+    if args.replay:
+    #if args.view:
         return
 
     dbFile=getHighScoreFile()
@@ -148,11 +151,7 @@ def listHighScores(args):
 
     if args.level:
         level=args.level[0]
-    if args.algorithm:
-        algorithm=args.algorithm[0]
-    
     values= None
-    #sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version,braid from highscores"
     sql="select gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version,braid,replay_of_gameid from highscores"
     if level is not None:
         sql=sql+" where level=%d" % level
@@ -173,8 +172,7 @@ def listHighScores(args):
     scores=[]
     rank=1
     #TODO: refactor code below, better formatting
-    #scores.append(["RANK","SCORE","LEVEL","GAMEID (REPL. OF)","ALGORITHM/BRAID","MOVES","ELAPSED SECS","PLAYER","VERSION","TIME"])
-    scores.append(["RANK","SCORE","LEVEL","GAMEID (REPL. OF)","ALGORITHM/BRAID","MOVES","ELAPSED SECS","VERSION","TIME"])
+    scores.append(["RANK","SCORE","LEVEL","GAMEID","ALGORITHM","MOVES","ELAPSED SECS","VERSION","TIME"])
     for row in cursor.execute(sql):
         scoreRow=[]
         scoreRow.append(rank)
@@ -185,15 +183,10 @@ def listHighScores(args):
             score="%d (cheat)" % score
         scoreRow.append(score)
         scoreRow.append(row['level'])
-        replaygameid=row['replay_of_gameid']
-        if replaygameid!=0:
-            scoreRow.append("%d (%d)" % (row['gameid'],replaygameid))
-        else:
-            scoreRow.append(row['gameid'])
-        scoreRow.append("%s/%s" % (row['algorithm'], row['braid']))
+        scoreRow.append(row['gameid'])
+        scoreRow.append("%s" % (row['algorithm']))
         scoreRow.append("%d/%d" % (row['moves'],row['shortest_path_moves']))
         scoreRow.append(row['elapsed_secs'])
-        #scoreRow.append(row['player_name'])
         scoreRow.append(row['version'])
         scoreRow.append(row['timestamp'])
         scores.append(scoreRow)

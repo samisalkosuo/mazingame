@@ -94,18 +94,18 @@ class GameScreen:
             #same seed
             self.grid=GameGrid(MAZE_ROWS,MAZE_COLS,MazingCell)
             self.algorithm=""
-            if level is None and self.args.algorithm:
-                self.algorithm=self.args.algorithm[0]
-            else:
-                self.algorithm=random.choice(list(mazepy.MAZE_ALGORITHMS.keys()))
+            #if level is None and self.args.algorithm:
+            #    self.algorithm=self.args.algorithm[0]
+            #else:
+            self.algorithm=random.choice(list(mazepy.MAZE_ALGORITHMS.keys()))
         
             self.grid=mazepy.initMaze(self.grid,self.algorithm)
 
-            braid=self.args.braid
-            if braid<0:
-                braid=0.0
-            if braid>1.0:
-                braid=1.0
+            braid=0.5#self.args.braid
+            #if braid<0:
+            #    braid=0.0
+            #if braid>1.0:
+            #    braid=1.0
             self.grid.doBraid(braid)
 
             playerRow=MAZE_ROWS-1
@@ -299,7 +299,8 @@ class GameScreen:
 
     def calculateScore(self,updateStatusLine=True):
         #elapsed since start
-        if self.args.view:
+        if self.args.replay:
+        #if self.args.view:
             #do not calculate score if replaying
             return
         elapsedMsec=(utils.currentTimeMillis() - self.startTime)
