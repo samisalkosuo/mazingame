@@ -55,11 +55,11 @@ def parseCommandLineArgs():
     #parse command line args
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
     parser.add_argument('-l','--level', nargs=1, type=int, metavar='LEVELID',help='Maze level. This integer is a random seed to create the maze.')
-    parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Play again game with specified id.')
+    parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Replay game with specified id.')
     parser.add_argument('-nf','--nofullscreen', action='store_true', help='Do not use full screen. Default is to show entire maze in terminal, but only if terminal size is larger than the maze.')
     parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
     parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
-    parser.add_argument('-hs','--highscores', action='store_true', help='Show high scores. Specify --level to select scores for the level and --showpath to incude cheat scores. Use %s environment variable to set high score file (default is $HOME/%s).' % (MAZINGAME_HIGHSCORE_FILE,DEFAULT_MAZINGAME_HIGHSCORE_FILE))
+    parser.add_argument('-hs','--highscores', action='store_true', help='Show high scores. Specify --level to select scores for the level and --cheat to incude cheat scores.')
     parser.add_argument('--cheat', action='store_true', help='Show also cheat highscores.')
     parser.add_argument('-v','--version', action='store_true', help='Show version info.')
     

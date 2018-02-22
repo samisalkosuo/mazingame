@@ -1,11 +1,14 @@
-
 FROM python:3.6.4
+
+LABEL maintainer="Sami Salkosuo"
+LABEL source_url="https://github.com/samisalkosuo/mazingame"
 
 WORKDIR /mazingame
 
-#install mazepy requirement and makes data-directory that holds scores and game history
+#install mazepy requirement and make data-directory that holds scores and game history
 RUN pip install mazepy \
     && mkdir /data
+
 VOLUME [ "/data" ]
 
 #copy mazingame files

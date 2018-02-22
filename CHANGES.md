@@ -1,3 +1,8 @@
+## Version 1.7 (22.02.2018)
+
+- Removed --view option. --replay now replays game. 
+- Removed --algorithm and --braid options. 
+
 ## Version 1.6 (13.02.2018)
 
 - Changed data dir /mazingame/gamedata to /data.
