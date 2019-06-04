@@ -56,7 +56,7 @@ def parseCommandLineArgs():
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
     parser.add_argument('-l','--level', nargs=1, type=int, metavar='LEVELID',help='Maze level. This integer is a random seed to create the maze.')
     parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Replay game with specified id.')
-    parser.add_argument('-nf','--nofullscreen', action='store_true', help='Do not use full screen. Default is to show entire maze in terminal, but only if terminal size is larger than the maze.')
+    #parser.add_argument('-nf','--nofullscreen', action='store_true', help='Do not use full screen. Default is to show entire maze in terminal, but only if terminal size is larger than the maze.')
     parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
     parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
     parser.add_argument('-hs','--highscores', action='store_true', help='Show high scores. Specify --level to select scores for the level and --cheat to incude cheat scores.')
@@ -107,8 +107,8 @@ def start(stdscr,textList):
     stdscr.clear()
 
     useFullTerminal=True
-    if args.nofullscreen:
-        useFullTerminal=False
+    #if args.nofullscreen:
+    #    useFullTerminal=False
     gameScreen=GameScreen(stdscr,useFullTerminal,args)
     level=None
     if args.level:
