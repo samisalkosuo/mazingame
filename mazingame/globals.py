@@ -23,7 +23,7 @@
 #All global constants
 
 NAME="MazinGame"
-COPYRIGHT="(C) 2015,2018 Sami Salkosuo"
+COPYRIGHT="(C) 2015,2019 Sami Salkosuo"
 LICENSE="Licensed under The MIT License."
 DESCRIPTION=["A game of maze.","Inspired by the book 'Mazes for Programmers' by Jamis Buck","(https://pragprog.com/book/jbmaze/mazes-for-programmers)."]
 
