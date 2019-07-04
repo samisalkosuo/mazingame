@@ -24,7 +24,7 @@
 # THE SOFTWARE.
 
 #add correct version number here
-__version__ = "1.7"
+__version__ = "1.8"
 
 from curses import wrapper
 import getpass
