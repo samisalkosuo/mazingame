@@ -35,6 +35,8 @@ import argparse
 import time
 import random
 import json 
+import signal
+import sys
 
 from .globals import *
 
@@ -215,8 +217,17 @@ def start(stdscr,textList):
             #textList.append("  Level  : %d" % gameScreen.level)
 
 
+def signal_handler(sig, frame):
+    print('Exit by CTRL-C')
+    sys.exit(0)
+
+def signal_handler_exit(sig, frame):
+    sys.exit(0)
 
 def main():
+    #signal handlers to catch ctrl-c.
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler_exit)
     try:
         parseCommandLineArgs()
         if args.highscores:
