@@ -70,6 +70,13 @@ def getHighScoreFile():
     #utils.debug(dbFile)
     return dbFile
 
+def createTables(cursor):
+
+    #SQLite uses boolean value '1' for true and '0' false
+    cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat integer,version text,braid real,replay_of_gameid integer)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, row integer, column integer)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS mazes (gameid integer,player_row integer,player_column integer, goal_row integer, goal_column integer, maze_json text)''')
+
 
 def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elapsed,cheat,algorithm):
     #TODO: change high score file to text file and use inmemory sqlite to show scores
@@ -89,9 +96,7 @@ def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elap
     timestamp=utils.currentTimeISO8601()
     (conn,cursor)=utils.openDatabase(dbFile)
 
-    #SQLite uses boolean value '1' for true and '0' false
-    cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat integer,version text,braid real,replay_of_gameid integer)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, row integer, column integer)''')
+    createTables(cursor)
 
     if args.replay:
         replaygameid=args.replay[0]
@@ -106,7 +111,6 @@ def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elap
 
     #save maze
     mazeJSON=grid.toJSONString()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS mazes (gameid integer,player_row integer,player_column integer, goal_row integer, goal_column integer, maze_json text)''')
     values= (gameid, player.startingRow,player.startingColumn,goal.row,goal.column,mazeJSON)
     cursor.execute('insert into mazes (gameid,player_row, player_column,goal_row,goal_column, maze_json) values (?,?,?,?,?,?)', values)
 
