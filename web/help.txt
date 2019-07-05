@@ -1,0 +1,14 @@
+Welcome to MazinGame, The Web Version!
+
+
+Commands:
+
++-----------------+---------------------+
+|mazingame        | Start the game.     |
+|highscores       | Show highscores.    |
+|mazingame --help | Show mazingame help.|
++-----------------+---------------------+
+
+
+Have a good time and go to that X!
+

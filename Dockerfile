@@ -7,6 +7,7 @@ WORKDIR /mazingame
 
 #install mazepy requirement and make data-directory that holds scores and game history
 RUN pip install mazepy \
+    && pip install pg8000 \
     && mkdir /data
 
 VOLUME [ "/data" ]

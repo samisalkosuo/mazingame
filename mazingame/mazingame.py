@@ -92,7 +92,10 @@ def start(stdscr,textList):
     #call refresh before anything so that pads work
     #http://stackoverflow.com/a/26305933
     stdscr.refresh()
-
+    #use curses default colors
+    curses.start_color()
+    curses.use_default_colors()
+    
     replayGameId=None
     if args.replay:
         replayGameId=args.replay[0]

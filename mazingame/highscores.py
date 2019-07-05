@@ -21,30 +21,62 @@
 # THE SOFTWARE.
 
 import os
+import datetime
 from .utils import utils
 from .globals import *
 
 
+def rowToDictGameMoves(row):
+    rowDict=dict()
+    #maze_row,maze_col
+    rowDict["maze_row"]=row[0]
+    rowDict["maze_col"]=row[1]
+    return rowDict
+
 def getGameMoves(gameId):
     dbFile=getHighScoreFile()
+    isPostgres=False
+    if dbFile == POSTGRES_ENABLED:
+        isPostgres=True
 
     (conn,cursor)=utils.openDatabase(dbFile)
     cursor.execute("select level from highscores where gameid=%d" % gameId)
     level=cursor.fetchone()[0]
     moves=[]
-    for row in cursor.execute("select row,column from gamemoves where gameid=%d order by move_index" % gameId):
-        moves.append((row['row'],row['column']))
+    for _row in cursor.execute("select maze_row,maze_col from gamemoves where gameid=%d order by move_index" % gameId):
+        if isPostgres==True:
+            row=rowToDictGameMoves(_row)
+        else:
+            row=_row
+        moves.append((row['maze_row'],row['maze_col']))
     utils.closeDatabase(conn)
 
     return (level,moves)
+
+def rowToDictMazeInfo(row):
+    rowDict=dict()
+    #maze_json,player_row,player_column,goal_row,goal_column
+    rowDict["maze_json"]=row[0]
+    rowDict["player_row"]=row[1]
+    rowDict["player_column"]=row[2]
+    rowDict["goal_row"]=row[3]
+    rowDict["goal_column"]=row[4]
+    return rowDict
 
 def getMazeInfo(gameId):
     dbFile=getHighScoreFile()
     if dbFile is None:
         return -1
+    isPostgres=False
+    if dbFile == POSTGRES_ENABLED:
+        isPostgres=True
     (conn,cursor)=utils.openDatabase(dbFile)
     cursor.execute("select maze_json,player_row,player_column,goal_row,goal_column from mazes where gameid=%d" % gameId)
-    row=cursor.fetchone()
+    _row=cursor.fetchone()
+    if isPostgres==True:
+        row=rowToDictMazeInfo(_row)
+    else:
+        row=_row
     result=dict()
     result["maze_json"]=row["maze_json"]
     result["player_row"]=row["player_row"]
@@ -56,6 +88,12 @@ def getMazeInfo(gameId):
     return result
 
 def getHighScoreFile():
+
+    #check env var
+    postgresHost=os.environ.get(POSTGRES_HOST)
+    if postgresHost != None:
+        return POSTGRES_ENABLED
+
 
     gameDataDir="/data"
     if os.path.exists(gameDataDir)==False:
@@ -70,17 +108,26 @@ def getHighScoreFile():
     #utils.debug(dbFile)
     return dbFile
 
-def createTables(cursor):
+def createTables(cursor,isPostgres):
 
-    #SQLite uses boolean value '1' for true and '0' false
-    cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat integer,version text,braid real,replay_of_gameid integer)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, row integer, column integer)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS mazes (gameid integer,player_row integer,player_column integer, goal_row integer, goal_column integer, maze_json text)''')
+    if isPostgres == True:
+        #Postgres tables
+        cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid SERIAL, timestamp timestamp, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat boolean,version text,braid real,replay_of_gameid integer)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, maze_row integer, maze_col integer)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS mazes (gameid integer,player_row integer,player_column integer, goal_row integer, goal_column integer, maze_json text)''')
+    
+    else:
+        #SQLite uses boolean value '1' for true and '0' false
+        cursor.execute('''CREATE TABLE IF NOT EXISTS highscores (gameid integer primary key autoincrement, timestamp text, score integer, level integer, algorithm text, player_name text, elapsed_secs real,moves integer, shortest_path_moves integer,cheat integer,version text,braid real,replay_of_gameid integer)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS gamemoves (gameid integer, move_index integer, maze_row integer, maze_col integer)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS mazes (gameid integer,player_row integer,player_column integer, goal_row integer, goal_column integer, maze_json text)''')
 
 
 def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elapsed,cheat,algorithm):
-    #TODO: change high score file to text file and use inmemory sqlite to show scores
-    #similar to CLI Password Manager
+
+    isPostgres=False
+    if os.environ.get(POSTGRES_HOST) != None:
+        isPostgres=True
 
     #braid no longer option, hardcoded to 0.5
     braid=0.5
@@ -93,35 +140,52 @@ def saveScores(args,version,grid,player,goal,level,score,moves,shortestPath,elap
     if dbFile is None:
         return -1
 
-    timestamp=utils.currentTimeISO8601()
     (conn,cursor)=utils.openDatabase(dbFile)
 
-    createTables(cursor)
+    createTables(cursor,isPostgres)
+    conn.commit()
+    timestamp=utils.currentTimeISO8601()
+    if isPostgres == True:
+        timestamp=datetime.datetime.utcnow()#timestamp.replace("T"," ")
+
 
     if args.replay:
         replaygameid=args.replay[0]
     else:
         replaygameid=0
-    values = (timestamp,score,level,elapsed,moves,shortestPath,cheat,player.name,algorithm,version,braid,replaygameid,level)
-    cursor.execute('insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version,braid,replay_of_gameid,level) values (?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
+    values = (timestamp,score,level,elapsed,moves,shortestPath,cheat,player.name,algorithm,version,braid,replaygameid)
+    insertSql='insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version,braid,replay_of_gameid) values (?,?,?,?,?,?,?,?,?,?,?,?)'
+    if isPostgres == True:
+        insertSql='insert into highscores (timestamp,score,level,elapsed_secs,moves,shortest_path_moves,cheat,player_name,algorithm,version,braid,replay_of_gameid) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+    cursor.execute(insertSql, values)
+    conn.commit()
     #save player moves for replay
     values= (timestamp,)
-    cursor.execute("select gameid from highscores where timestamp=?",values)
+    sql="select gameid from highscores where timestamp=?"
+    if isPostgres == True:
+        sql="select gameid from highscores where timestamp=%s"
+    cursor.execute(sql,values)
     gameid=cursor.fetchone()[0]
 
     #save maze
     mazeJSON=grid.toJSONString()
     values= (gameid, player.startingRow,player.startingColumn,goal.row,goal.column,mazeJSON)
-    cursor.execute('insert into mazes (gameid,player_row, player_column,goal_row,goal_column, maze_json) values (?,?,?,?,?,?)', values)
-
+    sql='insert into mazes (gameid,player_row, player_column,goal_row,goal_column, maze_json) values (?,?,?,?,?,?)'
+    if isPostgres == True:
+        sql='insert into mazes (gameid,player_row, player_column,goal_row,goal_column, maze_json) values (%s,%s,%s,%s,%s,%s)'
+    cursor.execute(sql, values)
+    conn.commit()
     moveIndex=0
 
     for cell in player.visitedCells:
         values = (gameid,moveIndex,cell.row,cell.column)
-        cursor.execute('insert into gamemoves (gameid,move_index,row,column) values (?,?,?,?)', values)
+        sql='insert into gamemoves (gameid,move_index,maze_row,maze_col) values (?,?,?,?)'
+        if isPostgres == True:
+            sql='insert into gamemoves (gameid,move_index,maze_row,maze_col) values (%s,%s,%s,%s)'
+        cursor.execute(sql, values)
+        conn.commit()
         moveIndex=moveIndex+1
 
-    conn.commit()
     utils.closeDatabase(conn)
     return gameid
 
@@ -137,12 +201,34 @@ def selectFromHighScores(gameid, columnName):
     utils.closeDatabase(conn)
     return result
 
+def rowToDict(row):
+    rowDict=dict()
+    #gameid,timestamp,score,level,algorithm,player_name,elapsed_secs,moves,shortest_path_moves,cheat,version,braid,replay_of_gameid
+    rowDict["gameid"]=row[0]
+    rowDict["timestamp"]=row[1]
+    rowDict["score"]=row[2]
+    rowDict["level"]=row[3]
+    rowDict["algorithm"]=row[4]
+    rowDict["player_name"]=row[5]
+    rowDict["elapsed_secs"]=row[6]
+    rowDict["moves"]=row[7]
+    rowDict["shortest_path_moves"]=row[8]
+    rowDict["cheat"]=row[9]
+    rowDict["version"]=row[10]
+    rowDict["braid"]=row[11]
+    rowDict["replay_of_gameid"]=row[12]
+    return rowDict
+
 def listHighScores(args):
     dbFile=getHighScoreFile()
 
-    if dbFile is None or os.path.exists(dbFile)==False:
-        print("No high score file.")
-        return
+    isPostgres=False
+    if dbFile == POSTGRES_ENABLED:
+        isPostgres=True
+    else:
+        if dbFile is None or os.path.exists(dbFile)==False:
+            print("No high score file.")
+            return
 
     (conn,cursor)=utils.openDatabase(dbFile)
 
@@ -164,9 +250,15 @@ def listHighScores(args):
     else:
         sql=sql+" where " 
     if cheat==True:
-        sql=sql+" (cheat=0 or cheat=1)"
+        if isPostgres==True:
+            sql=sql+" (cheat=FALSE or cheat=TRUE)"
+        else:
+            sql=sql+" (cheat=0 or cheat=1)"
     else:
-        sql=sql+" cheat=0"
+        if isPostgres==True:
+            sql=sql+" (cheat=FALSE)"
+        else:
+            sql=sql+" cheat=0"
     if algorithm is not None:
         sql=sql+" and algorithm='%s'" % algorithm
 
@@ -175,9 +267,14 @@ def listHighScores(args):
     #print(sql)
     scores=[]
     rank=1
-    #TODO: refactor code below, better formatting
+
     scores.append(["RANK","SCORE","LEVEL","GAMEID","ALGORITHM","MOVES","ELAPSED SECS","VERSION","TIME"])
-    for row in cursor.execute(sql):
+    for _row in cursor.execute(sql):
+        if isPostgres:            
+            row=rowToDict(_row)
+        else:
+            row=_row
+        #print(row)
         scoreRow=[]
         scoreRow.append(rank)
         rank=rank+1
@@ -190,7 +287,7 @@ def listHighScores(args):
         scoreRow.append(row['gameid'])
         scoreRow.append("%s" % (row['algorithm']))
         scoreRow.append("%d/%d" % (row['moves'],row['shortest_path_moves']))
-        scoreRow.append(row['elapsed_secs'])
+        scoreRow.append("%.03f" % row['elapsed_secs'])
         scoreRow.append(row['version'])
         scoreRow.append(row['timestamp'])
         scores.append(scoreRow)

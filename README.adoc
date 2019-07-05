@@ -60,7 +60,7 @@ About options:
 * `--rm` removes image after use. No need to keep it.
 * `-v` maps local directory to directory used by the program.
 
-== Install and usage - pip
+=== Install and usage - pip
 
 There is a version in pip. Install from pip:
 
@@ -100,6 +100,26 @@ Use Docker volume to point `/data` to your own directory.
 |===
 
 Note: database in high score file may change from version to version, if you get SQLite error when saving high scores, delete your high score file.
+
+== Web version
+
+* Build web version:
+** `docker build -t mazingame_web -f Dockerfile_web.dockerfile .`
+* Run web version:
+** `docker run -it --rm -p 10987:8080 -v &lt;path_to_local_dir>:/data mazingame_web` 
+* Go to http://127.0.0.1:10987.
+
+=== External PostgreSQL
+
+* Have an external PostgreSQL.
+** For example, Docker container:
+*** `docker run --net maze --name mazingpostgres -p 5432:5432  -e POSTGRES_DB=highscores -e POSTGRES_USER=mazingplayer -e POSTGRES_PASSWORD=mazingpwd -it --rm postgres:11.4-alpine`
+*** or using persistent volume:
+*** `docker run --net maze --name mazingpostgres -p 5432:5432  -e POSTGRES_DB=highscores -e POSTGRES_USER=mazingplayer -e POSTGRES_PASSWORD=mazingpwd -it --rm -v &lt;path_to_local_dir>:/var/lib/postgresql/data postgres:11.4-alpine`
+* Start MazinGame web version Docker container with env variables:
+** `docker run -it --rm --net maze -p 8888:8080 -e POSTGRES_HOST=mazingpostgres -e POSTGRES_PORT=5432 -e POSTGRES_USER=mazingplayer -e POSTGRES_PASSWORD=mazingpwd -e POSTGRES_DB=highscores mazingame`
+* Note `--net` option in commands. Create Docker network using:
+** `docker network create maze`
 
 == About
 

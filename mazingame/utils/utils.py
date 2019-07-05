@@ -25,9 +25,13 @@
 
 from datetime import datetime
 import sys
+import os
 import time
 import sqlite3
 import hashlib
+from ..globals import *
+import pg8000
+
 
 #TODO: make this as class
 #class Utils:
@@ -114,13 +118,29 @@ def currentTimeISO8601():
 
 #SQLITE
 def openDatabase(file,inMemory=False):
-    """Open SQLite db and return tuple (connection,cursor)"""
-    if inMemory==True:
-        conn=sqlite3.connect(':memory:')
+    """Open SQLite db or Postgres and return tuple (connection,cursor)"""
+
+    #postgres as docker image
+    #docker run --net maze --name mazingpostgres -p 5432:5432  -e POSTGRES_DB=highscores -e POSTGRES_USER=mazingplayer -e POSTGRES_PASSWORD=mazingpwd -it --rm postgres:11.4-alpine
+    #postgres client as docker image
+    #ocker run -it --rm --net maze jbergknoff/postgresql-client postgresql://mazingplayer:mazingpwd@mazingpostgres:5432/highscores
+    if file == POSTGRES_ENABLED:
+        postgresHost=os.environ.get(POSTGRES_HOST)
+        postgresPort=int(os.environ.get(POSTGRES_PORT))
+        postgresDb=os.environ.get(POSTGRES_DB)
+        postgresUser=os.environ.get(POSTGRES_USER)
+        postgresPwd=os.environ.get(POSTGRES_PASSWORD)
+        conn = pg8000.connect(user=postgresUser, password=postgresPwd, host=postgresHost, database=postgresDb, port=postgresPort)
+        cursor = conn.cursor()
     else:
-        conn=sqlite3.connect(file)
-    conn.row_factory = sqlite3.Row
-    cursor=conn.cursor()    
+        #local sqlite
+        if inMemory==True:
+            conn=sqlite3.connect(':memory:')
+        else:
+            conn=sqlite3.connect(file)
+        conn.row_factory = sqlite3.Row
+        cursor=conn.cursor()    
+    
     return (conn,cursor)
 
 
