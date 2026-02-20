@@ -4,17 +4,17 @@
 - Updated copyright year to 2026
 - Modernization and maintenance updates
 
-## Version 1.7 (22.02.2026)
+## Version 1.7 (22.02.2018)
 
 - Removed --view option. --replay now replays game. 
 - Removed --algorithm and --braid options. 
 
-## Version 1.6 (13.02.2026)
+## Version 1.6 (13.02.2018)
 
 - Changed data dir /mazingame/gamedata to /data.
 - Refactoring. Moved code to files.
 
-## Version 1.5 (12.02.2026)
+## Version 1.5 (12.02.2018)
 
 - Added -nf, --nofullscreen option to disable full screen.
 - Removed -f, --fulscreen option. Default is now full screen.
@@ -23,7 +23,7 @@
   the random seed to create the maze.
 - Refactored to be run primarily as Docker image.
 
-## Version 1.4 (09.02.2026)
+## Version 1.4 (09.02.2018)
 
 - Added Docker distribution.
 - pip-distribution no longer actively maintained.
