@@ -1,5 +1,10 @@
 # MazinGame
 
+[![CI](https://github.com/samisalkosuo/mazingame/workflows/CI/badge.svg)](https://github.com/samisalkosuo/mazingame/actions)
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A game of maze.
 
 Idea of the game is to find a path through the maze to a location marked by 'X'.
@@ -34,9 +39,15 @@ not see it correctly, so go to GitHub page to see it)::
 
 ## Requirements
 
-[Docker runtime](https://www.docker.com/get-docker). If you ask why? Because it makes distribution simple and life easier :-).
+### Docker (Recommended)
+[Docker runtime](https://www.docker.com/get-docker) - Makes distribution simple and life easier!
 
-If using sources, Python 3.x with curses and [mazepy](https://github.com/samisalkosuo/mazepy). Does not work with Python2 or Windows without Cygwin.
+### From Source
+- **Python 3.9 or higher** (3.9, 3.10, 3.11, 3.12 supported)
+- curses library (included in most Unix/Linux Python installations)
+- [mazepy](https://github.com/samisalkosuo/mazepy) (vendored in this project)
+
+**Note**: Does not work with Python 2. On Windows, requires WSL (Windows Subsystem for Linux) or Cygwin.
 
 ## Install and usage - Docker
 
@@ -60,11 +71,41 @@ About options:
 
 ## Install and usage - pip
 
-There is a version in pip. Install from pip:
+Install from PyPI:
 
-- **pip install mazingame**.
+```bash
+pip install mazingame
+```
 
-Note that this is not regularly updated.
+**Note**: PyPI version may not be as up-to-date as the Docker image or GitHub repository.
+
+## Development Setup
+
+For contributing or local development:
+
+```bash
+# Clone the repository
+git clone https://github.com/samisalkosuo/mazingame.git
+cd mazingame
+
+# Create virtual environment
+python3.11 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run tests
+pytest
+
+# Run the game
+python -m mazingame
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 ## Instructions
 
@@ -89,6 +130,16 @@ And a few more.
 Note: database in high score file may change from version to version, if you
 get SQLite error when saving high scores, delete your high score file.
 
+## Features
+
+- 🎮 Multiple maze generation algorithms (Binary Tree, Recursive Backtracker, Aldous-Broder, Wilson, Hunt and Kill, Sidewinder)
+- 📊 High score tracking with SQLite database
+- 🎬 Game replay functionality
+- 🖥️ Adaptive screen modes (full-screen and scrolling)
+- 🐳 Docker support for easy deployment
+- 🔍 Optional cheats (show path, show maze)
+- ⌨️ Keyboard controls (arrow keys or WASD)
+
 ## About
 
 This hobby project was inspired by the book ["Mazes for Programmers" by Jamis Buck](https://pragprog.com/book/jbmaze/mazes-for-programmers).
@@ -96,3 +147,22 @@ This hobby project was inspired by the book ["Mazes for Programmers" by Jamis Bu
 Python translations of the maze code is in [mazepy-project](https://github.com/samisalkosuo/mazepy).
 
 See [http://sami.salkosuo.net/mazingame/](http://sami.salkosuo.net/mazingame/) for some background about MazinGame.
+
+## Modernization
+
+This project has been modernized to use:
+- Python 3.9+ with type hints
+- Modern packaging with `pyproject.toml`
+- Comprehensive logging
+- Automated testing and CI/CD
+- Code quality tools (black, ruff, mypy)
+
+See [MODERNIZATION.md](MODERNIZATION.md) for details on all improvements.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

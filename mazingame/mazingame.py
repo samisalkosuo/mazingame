@@ -1,86 +1,156 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
-#
-# The MIT License (MIT)
+"""MazinGame - A game of maze.
 
-# Copyright (c) 2015,2018 Sami Salkosuo
+The MIT License (MIT)
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+Copyright (c) 2015,2018 Sami Salkosuo
 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-#add correct version number here
-__version__ = "1.7"
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
+__version__ = "1.7.0"
 
 from curses import wrapper
-import getpass
-import os
-import math
 import curses
 import argparse
 import time
 import random
-import json 
+import logging
+from typing import List, Optional, Any
 
-from .globals import *
-
-from mazepy import mazepy
+from .globals import (
+    NAME, DESCRIPTION, COPYRIGHT, LICENSE,
+    MIN_SCROLL_ROWS, MIN_SCROLL_COLS,
+    FULLSCREEN_MIN_ROWS, FULLSCREEN_MIN_COLS
+)
+from .mazepy import mazepy
 from .curses_utils import curses_utils
 from .utils import utils
-from .highscores import *
-from .gameclasses import Player
-from .gameclasses import Goal
-from .gameclasses import MazingCell
-from .gameclasses import GameGrid
+from .highscores import getGameMoves, getMazeInfo, saveScores, listHighScores
+from .gameclasses import Player, Goal, MazingCell, GameGrid
 from .GameScreen import GameScreen
 
-#command line args
-args=None
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-def parseCommandLineArgs():
-    #parse command line args
+# Command line args (global for compatibility)
+args: Optional[argparse.Namespace] = None
+
+
+def parseCommandLineArgs() -> None:
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description='MazinGame. A game of maze.')
-    parser.add_argument('-l','--level', nargs=1, type=int, metavar='LEVELID',help='Maze level. This integer is a random seed to create the maze.')
-    parser.add_argument('-r','--replay', nargs=1, type=int, metavar='GAMEID',help='Replay game with specified id.')
-    parser.add_argument('-nf','--nofullscreen', action='store_true', help='Do not use full screen. Default is to show entire maze in terminal, but only if terminal size is larger than the maze.')
-    parser.add_argument('--showpath', action='store_true', help='Show shortest path. Remember: this is cheating.')
-    parser.add_argument('--showmaze', action='store_true', help='Show entire maze. Remember: this is cheating.')
-    parser.add_argument('-hs','--highscores', action='store_true', help='Show high scores. Specify --level to select scores for the level and --cheat to incude cheat scores.')
-    parser.add_argument('--cheat', action='store_true', help='Show also cheat highscores.')
-    parser.add_argument('-v','--version', action='store_true', help='Show version info.')
+    parser.add_argument(
+        '-l', '--level',
+        nargs=1,
+        type=int,
+        metavar='LEVELID',
+        help='Maze level. This integer is a random seed to create the maze.'
+    )
+    parser.add_argument(
+        '-r', '--replay',
+        nargs=1,
+        type=int,
+        metavar='GAMEID',
+        help='Replay game with specified id.'
+    )
+    parser.add_argument(
+        '-nf', '--nofullscreen',
+        action='store_true',
+        help='Do not use full screen. Default is to show entire maze in terminal, '
+             'but only if terminal size is larger than the maze.'
+    )
+    parser.add_argument(
+        '--showpath',
+        action='store_true',
+        help='Show shortest path. Remember: this is cheating.'
+    )
+    parser.add_argument(
+        '--showmaze',
+        action='store_true',
+        help='Show entire maze. Remember: this is cheating.'
+    )
+    parser.add_argument(
+        '-hs', '--highscores',
+        action='store_true',
+        help='Show high scores. Specify --level to select scores for the level '
+             'and --cheat to include cheat scores.'
+    )
+    parser.add_argument(
+        '--cheat',
+        action='store_true',
+        help='Show also cheat highscores.'
+    )
+    parser.add_argument(
+        '-v', '--version',
+        action='store_true',
+        help='Show version info.'
+    )
     
     global args
     args = parser.parse_args()
+    logger.debug(f"Parsed command line args: {args}")
 
 
-def getHelpLine():
+def getHelpLine() -> str:
+    """Get help text for the game.
+    
+    Returns:
+        Help text string
+    """
     return "Use cursor keys to move and 'q' to quit."
 
 
-def start(stdscr,textList):
+def start(stdscr: Any, textList: List[str]) -> None:
+    """Start the game.
+    
+    Args:
+        stdscr: Curses standard screen object
+        textList: List to append result messages to
+    """
     
     height,width = stdscr.getmaxyx()
-    if height < FULLSCREEN_MIN_ROWS:
-        input("Console screen is too small: %d rows. Full screen needs minimum of %d rows. CTRL-C to exit." % (height,FULLSCREEN_MIN_ROWS))
+    logger.info(f"Terminal size: {height}x{width}")
+    
+    # Check minimum dimensions for scrolling mode
+    if height < MIN_SCROLL_ROWS:
+        error_msg = f"Console screen is too small: {height} rows. Minimum {MIN_SCROLL_ROWS} rows required."
+        logger.error(error_msg)
+        input(f"{error_msg} CTRL-C to exit.")
         return
-    if width < FULLSCREEN_MIN_COLS:
-        input("Console screen is too small: %d columns. Full screen needs minimum of %d columns. CTRL-C to exit." % (width,FULLSCREEN_MIN_COLS))
+    if width < MIN_SCROLL_COLS:
+        error_msg = f"Console screen is too small: {width} columns. Minimum {MIN_SCROLL_COLS} columns required."
+        logger.error(error_msg)
+        input(f"{error_msg} CTRL-C to exit.")
         return
 
+    # Determine display mode based on terminal size
+    displayMode = "scrolling"
+    if height >= FULLSCREEN_MIN_ROWS and width >= FULLSCREEN_MIN_COLS:
+        displayMode = "full-screen"
+    logger.info(f"Display mode: {displayMode}")
+    
     try:
         cursorVisibility=curses.curs_set(0)
     except:
@@ -102,14 +172,23 @@ def start(stdscr,textList):
         line3="REPLAY: game %d" % replayGameId
     else:
         line3="'X' marks the spot. Go there."
-    curses_utils.infoWindow(stdscr,line1=line1,line3=line3)
+    
+    # Add display mode information
+    line4 = "Display mode: %s (%dx%d)" % (displayMode, height, width)
+    curses_utils.infoWindow(stdscr,line1=line1,line3=line3,line4=line4)
 
     stdscr.clear()
 
+    # Determine if full terminal should be used
     useFullTerminal=True
     if args.nofullscreen:
         useFullTerminal=False
-    gameScreen=GameScreen(stdscr,useFullTerminal,args)
+    elif displayMode == "scrolling":
+        # Force scrolling mode for smaller terminals
+        useFullTerminal=False
+    
+    # Pass terminal dimensions to GameScreen
+    gameScreen=GameScreen(stdscr,useFullTerminal,args,height,width)
     level=None
     if args.level:
         level=args.level[0]
@@ -149,11 +228,13 @@ def start(stdscr,textList):
                 break
         textList.append("Replay of game %d %s." % (replayGameId,statusMsg))
     else:
+        logger.info(f"Starting new game with level: {level}")
         gameScreen.initGame(level)
         while 1:
             if gameScreen.gameover==False:
                 c = stdscr.getch()
             else:
+                logger.info("Game completed successfully")
                 break
             if c == ord('h'):
                 gameScreen.updateStatusLine(getHelpLine())
@@ -216,12 +297,17 @@ def start(stdscr,textList):
 
 
 
-def main():
+def main() -> None:
+    """Main entry point for MazinGame."""
     try:
         parseCommandLineArgs()
+        logger.info("MazinGame started")
+        
         if args.highscores:
+            logger.info("Displaying high scores")
             listHighScores(args)
             return
+            
         if args.version:
             print("%s v%s" % (NAME,__version__))
             print("")
@@ -230,20 +316,30 @@ def main():
             print(COPYRIGHT)
             print(LICENSE)
             return
+            
         if args.replay:
             replayGameId=args.replay[0]
+            logger.info(f"Replaying game ID: {replayGameId}")
             mazeInfo=getMazeInfo(replayGameId)
             if mazeInfo is None:
+                logger.error(f"Cannot replay game {replayGameId}. No game info found.")
                 print("Can not replay game. No game info.")
                 return
         
         textList=[]
         wrapper(start,textList)
         if textList:
-            print("\n".join(textList))        
+            print("\n".join(textList))
+        logger.info("MazinGame ended normally")
+            
     except KeyboardInterrupt:
-        #ignore ctrl-c
+        logger.info("Game interrupted by user (Ctrl-C)")
+        # Gracefully handle user interruption
         pass
+    except Exception as e:
+        logger.exception(f"Unexpected error in main: {e}")
+        print(f"An unexpected error occurred: {e}")
+        raise
 
 if __name__ == "__main__": 
     main()

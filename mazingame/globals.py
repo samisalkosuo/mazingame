@@ -44,5 +44,11 @@ PAD_COLS=MAZE_COLS*4+1
 SCREEN_ROWS=24
 SCREEN_COLUMNS=80
 
-FULLSCREEN_MIN_ROWS=43
-FULLSCREEN_MIN_COLS=102
+# Minimum dimensions for scrolling mode (smaller terminals)
+# These allow the game to be playable with scrolling viewport
+MIN_SCROLL_ROWS=15  # Minimum: 10 visible rows + 2 borders + 1 status + 2 buffer
+MIN_SCROLL_COLS=40  # Minimum width to show meaningful maze portion
+
+# Full-screen mode dimensions (entire maze visible at once)
+FULLSCREEN_MIN_ROWS=43  # PAD_ROWS (42) + 1 status line
+FULLSCREEN_MIN_COLS=102  # PAD_COLS (101) + 1 for border

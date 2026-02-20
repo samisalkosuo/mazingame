@@ -22,12 +22,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-#GameScreen class
+"""GameScreen module for MazinGame.
+
+This module contains the GameScreen class which manages the game display,
+player movement, scoring, and rendering of the maze in the terminal.
+"""
+
 import random
 import getpass
 import math
+import curses
+import logging
+from typing import Any, Optional
+from argparse import Namespace
 
-from mazepy import mazepy
+from .globals import (
+    MAZE_ROWS, MAZE_COLS, PAD_ROWS, PAD_COLS,
+    SCREEN_ROWS, SCREEN_COLUMNS
+)
+from .mazepy import mazepy
 from .curses_utils import curses_utils
 from .utils import utils
 from .highscores import *
@@ -37,9 +50,41 @@ from .gameclasses import MazingCell
 from .gameclasses import GameGrid
 from .curses_utils import curses_utils
 
+logger = logging.getLogger(__name__)
+
 class GameScreen:
-    #game screen has status line, visible screen area and full maze area as pad
-    def __init__(self,stdscr,useFullTerminal,args):
+    """Manages the game screen display and interaction.
+    
+    The GameScreen class handles:
+    - Terminal display (full-screen or scrolling mode)
+    - Player movement and position tracking
+    - Maze rendering with curses
+    - Score calculation
+    - Game state management
+    
+    Attributes:
+        stdscr: Curses standard screen object
+        grid: The maze grid
+        player: Player object
+        gamepad: Curses pad for maze display
+        goal: Goal object marking the target location
+        useFullTerminal: Whether to use full terminal or scrolling mode
+        score: Current game score
+        totalMoves: Total moves made by player
+        gameover: Whether the game has ended
+    """
+    
+    def __init__(self, stdscr: Any, useFullTerminal: bool, args: Namespace,
+                 terminalHeight: Optional[int] = None, terminalWidth: Optional[int] = None) -> None:
+        """Initialize the GameScreen.
+        
+        Args:
+            stdscr: Curses standard screen object
+            useFullTerminal: Whether to use full terminal display
+            args: Command line arguments namespace
+            terminalHeight: Terminal height in rows (optional)
+            terminalWidth: Terminal width in columns (optional)
+        """
         self.stdscr=stdscr
         self.grid=None
         self.player=None
@@ -60,9 +105,29 @@ class GameScreen:
         self.algorithm=""
         self.args=args
         #screenshot index
-        self.screenshotIndex=0   
+        self.screenshotIndex=0
+        
+        # Store terminal dimensions for dynamic screen sizing
+        self.terminalHeight=terminalHeight
+        self.terminalWidth=terminalWidth
+        
+        # Calculate dynamic screen dimensions based on terminal size
+        # These will be used instead of global SCREEN_ROWS and SCREEN_COLUMNS
+        if terminalHeight is not None and terminalWidth is not None:
+            # Reserve 1 row for status line
+            self.screenRows = min(terminalHeight - 1, SCREEN_ROWS)
+            self.screenColumns = min(terminalWidth, SCREEN_COLUMNS)
+        else:
+            # Fallback to defaults if dimensions not provided
+            self.screenRows = SCREEN_ROWS
+            self.screenColumns = SCREEN_COLUMNS
 
-    def initGame(self,level=None):
+    def initGame(self, level: Optional[int] = None) -> None:
+        """Initialize a new game with the specified level.
+        
+        Args:
+            level: Random seed for maze generation. If None, generates random level.
+        """
         
         if level is None:
             #set level
@@ -110,7 +175,7 @@ class GameScreen:
 
             playerRow=MAZE_ROWS-1
             playerColumn=random.randint(0,MAZE_COLS-1)
-            goalRow=random.randint(0,MAZE_ROWS/2)
+            goalRow=random.randint(0, MAZE_ROWS // 2)
             goalColumn=random.randint(0,MAZE_COLS-1)
         
         #set start time after maze has been initialized
@@ -153,8 +218,8 @@ class GameScreen:
                         self.gamepad.addch(y,x, ord(self.goal.symbol))
                     else:
                         self.gamepad.addch(y,x, ord(' '))
-                except curses.error:
-                    pass
+                except curses.error as e:
+                    logger.debug(f"Could not add character at ({y},{x}): {e}")
 
         if self.args.showpath:
             for pathCell in self.shortestPath.getCells():
@@ -186,15 +251,21 @@ class GameScreen:
             cell.setContent(" ")
 
         #visible pad upper left corner
-        self.padCornerRow=PAD_ROWS - SCREEN_ROWS
-        self.padCornerColumn=PAD_COLS  - SCREEN_COLUMNS
+        # Use dynamic screen dimensions instead of global constants
+        self.padCornerRow=PAD_ROWS - self.screenRows
+        self.padCornerColumn=PAD_COLS - self.screenColumns
         if self.padCornerColumn<0 or self.player.column<6:
             self.padCornerColumn=0
 
 
         self.updatePad()
 
-    def movePlayer(self,direction):
+    def movePlayer(self, direction: str) -> None:
+        """Move the player in the specified direction.
+        
+        Args:
+            direction: Direction to move ('up', 'down', 'left', 'right')
+        """
         #direction is 'up', 'down', 'left', 'right'
         #toRow and toColumn are maze coordinates where to move the player
         player=self.player    
@@ -238,19 +309,20 @@ class GameScreen:
         self.updatePad()
 
 
-    def takeScreenshot(self):
+    def takeScreenshot(self) -> None:
         #take screenshot to specified directory
         #hardcoded to use Cygwin
         os.system('/usr/bin/import.exe -window "/cygdrive/c/Dropbox/git/mazingame" /cygdrive/c/Dropbox/git/mazingame/temp/image_%03d.png' % screenshotIndex)
         self.screenshotIndex=self.screenshotIndex+1
 
-    def addCharacter(self,row,column,chr):
+    def addCharacter(self, row: int, column: int, chr: str) -> None:
         #add character to game screen
         #note: this should be only place where actual addstr takes place
         #in gamepad
         self.gamepad.addstr(row,column,chr)
 
-    def updatePad(self):
+    def updatePad(self) -> None:
+        """Update the game pad with current player position and check for game completion."""
         #updates game pad
 
         #update cell
@@ -273,31 +345,46 @@ class GameScreen:
             self.gameover=True
 
 
-    def scroll(self):
+    def scroll(self) -> None:
         screenRow=self.player.screenRow
         screenColumn=self.player.screenColumn
         
-        visibleWinRows=self.padCornerRow+SCREEN_ROWS-1
-        visibleWinColumns=self.padCornerColumn+SCREEN_COLUMNS-1
+        # Use dynamic screen dimensions instead of hardcoded values
+        visibleWinRows=self.padCornerRow+self.screenRows-1
+        visibleWinColumns=self.padCornerColumn+self.screenColumns-1
+        
+        # Calculate maximum scroll positions dynamically
+        maxPadCornerRow = PAD_ROWS - self.screenRows
+        maxPadCornerColumn = PAD_COLS - self.screenColumns
+        
         if (screenRow-self.padCornerRow)<4:
             self.padCornerRow=self.padCornerRow-2
             if self.padCornerRow<1:
                 self.padCornerRow=0
-        if (screenRow-self.padCornerRow)>SCREEN_ROWS-5:
+        if (screenRow-self.padCornerRow)>self.screenRows-5:
             self.padCornerRow=self.padCornerRow+2
-            if self.padCornerRow>18:
-                self.padCornerRow=18
+            if self.padCornerRow>maxPadCornerRow:
+                self.padCornerRow=maxPadCornerRow
         if (screenColumn-self.padCornerColumn)<4:
             self.padCornerColumn=self.padCornerColumn-4
             if self.padCornerColumn<4:
                 self.padCornerColumn=0
-        if (screenColumn-self.padCornerColumn)>77:
+        if (screenColumn-self.padCornerColumn)>self.screenColumns-3:
             self.padCornerColumn=self.padCornerColumn+4
-            if self.padCornerColumn>20:
-                self.padCornerColumn=20
+            if self.padCornerColumn>maxPadCornerColumn:
+                self.padCornerColumn=maxPadCornerColumn
 
 
-    def calculateScore(self,updateStatusLine=True):
+    def calculateScore(self, updateStatusLine: bool = True) -> None:
+        """Calculate the current game score based on moves and time.
+        
+        The score is calculated based on:
+        - Number of moves vs optimal path length
+        - Time elapsed vs baseline time
+        
+        Args:
+            updateStatusLine: Whether to update the status line display
+        """
         #elapsed since start
         if self.args.replay:
         #if self.args.view:
@@ -328,21 +415,22 @@ class GameScreen:
             self.updateStatusLine("P: (%d,%d) X: (%d,%d) Moves: %d/%d Elapsed: %.03fsecs Score: %d" % (self.player.row,self.player.column,self.goal.row,self.goal.column,self.totalMoves,self.shortestPathLength,self.elapsed,self.score))
             #self.updateStatusLine("Level: %d Moves: %d/%d Elapsed: %.03fsecs Score: %d" % (self.level,self.totalMoves,self.shortestPathLength,self.elapsed,self.score))
 
-    def refreshScreen(self):
+    def refreshScreen(self) -> None:
         #show pad in screen
         #Displays a section of the pad in the middle of the screen
         if self.useFullTerminal==False:
             self.scroll()
             repeat=True
-            col=SCREEN_COLUMNS
-            while repeat:                
+            col=self.screenColumns
+            while repeat:
                 try:
-                    self.gamepad.refresh(self.padCornerRow,self.padCornerColumn, 0,0,SCREEN_ROWS-1,col)
+                    # Use dynamic screen dimensions
+                    self.gamepad.refresh(self.padCornerRow,self.padCornerColumn, 0,0,self.screenRows-1,col)
                     repeat=False
-                except:
+                except curses.error as e:
                     #Cygwin default bash prompt fails to scroll screen to left
                     #this while,except should fix it
-                    #utils.debug("Error scrolling to cols: %d" % col)
+                    logger.debug(f"Error scrolling to cols {col}: {e}")
                     col=col-1
         else:
             self.gamepad.refresh()
@@ -359,7 +447,7 @@ class GameScreen:
         if self.replayInProgress==True:
             self.updateStatusLine("REPLAY Game ID: %d Moves: %d/%d " % (self.args.replay[0],self.totalMoves,self.shortestPathLength))
 
-    def renderCell(self,cell,centerRow,centerColumn,recursion=True):
+    def renderCell(self, cell: Any, centerRow: int, centerColumn: int, recursion: bool = True) -> None:
     
         #corners are always visible in current cell
         self.addCellChar(centerRow+1, centerColumn-2,"+")
@@ -395,7 +483,7 @@ class GameScreen:
             if recursion:
                 self.renderCell(cell.west,centerRow,centerColumn-4,False)
 
-    def addCellChar(self,row,column,chr):
+    def addCellChar(self, row: int, column: int, chr: str) -> None:
         if row>PAD_ROWS-2:
             #if row is in the status line, do nothing
             return
@@ -414,7 +502,7 @@ class GameScreen:
             self.addCharacter(row,column, chr)
 
     
-    def updateStatusLine(self,status):
+    def updateStatusLine(self, status: str) -> None:
         if self.useFullTerminal==False:
             row=SCREEN_ROWS-1
         else:

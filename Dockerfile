@@ -1,13 +1,19 @@
-FROM python:3.6.4
+FROM python:3.11-slim
 
 LABEL maintainer="Sami Salkosuo"
 LABEL source_url="https://github.com/samisalkosuo/mazingame"
 
 WORKDIR /mazingame
 
-#install mazepy requirement and make data-directory that holds scores and game history
-RUN pip install mazepy \
-    && mkdir /data
+# Install system dependencies for curses
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libncurses5-dev \
+    libncursesw5-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create data directory for highscores and game history
+RUN mkdir /data
+
 
 VOLUME [ "/data" ]
 

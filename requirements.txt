@@ -1,0 +1,3 @@
+# Core dependencies for mazingame
+# Note: mazepy is now vendored in mazingame/mazepy/
+# No external dependencies required

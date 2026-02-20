@@ -1,8 +1,16 @@
 /temp
 
+# Python virtual environments
+venv/
+.venv/
+ENV/
+env/
+.Python
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
 
 # C extensions
 *.so
@@ -57,3 +65,30 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# pytest
+.pytest_cache/
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ruff
+.ruff_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.whl
+*.tar.gz
