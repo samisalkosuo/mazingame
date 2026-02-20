@@ -5,7 +5,7 @@ import pytest
 def test_version():
     """Test that version is accessible."""
     from mazingame.mazingame import __version__
-    assert __version__ == "1.7.0"
+    assert __version__ == "2.0"
 
 
 def test_imports():

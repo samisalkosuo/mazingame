@@ -4,7 +4,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2015,2018 Sami Salkosuo
+Copyright (c) 2015,2026 Sami Salkosuo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-__version__ = "1.7.0"
+__version__ = "2.0"
 
 from curses import wrapper
 import curses
