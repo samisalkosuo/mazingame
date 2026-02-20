@@ -92,3 +92,14 @@ Thumbs.db
 # Build artifacts
 *.whl
 *.tar.gz
+
+# Web deployment
+data/
+logs/
+.env
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+web/static/js/xterm*.js
+web/static/css/xterm*.css

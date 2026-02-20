@@ -47,10 +47,14 @@ from .highscores import getGameMoves, getMazeInfo, saveScores, listHighScores
 from .gameclasses import Player, Goal, MazingCell, GameGrid
 from .GameScreen import GameScreen
 
-# Configure logging
+# Configure logging - write to file to avoid interfering with curses display
+import os
+log_file = os.environ.get('MAZINGAME_LOG_FILE', '/tmp/mazingame.log')
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    filename=log_file,
+    filemode='a'
 )
 logger = logging.getLogger(__name__)
 

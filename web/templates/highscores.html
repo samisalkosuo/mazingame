@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Mazingame - High Scores{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scores-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+    
+    .scores-table th,
+    .scores-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #3e3e42;
+    }
+    
+    .scores-table th {
+        background: #1e1e1e;
+        color: #007acc;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+    }
+    
+    .scores-table tr:hover {
+        background: #2d2d30;
+    }
+    
+    .scores-table .rank {
+        font-weight: bold;
+        color: #007acc;
+    }
+    
+    .scores-table .rank.gold {
+        color: #ffd700;
+    }
+    
+    .scores-table .rank.silver {
+        color: #c0c0c0;
+    }
+    
+    .scores-table .rank.bronze {
+        color: #cd7f32;
+    }
+    
+    .no-scores {
+        text-align: center;
+        padding: 40px;
+        color: #858585;
+    }
+    
+    .filter-controls {
+        margin: 20px 0;
+        text-align: center;
+    }
+    
+    .filter-controls select {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border: 1px solid #3e3e42;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        margin: 0 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>🏆 High Scores</h2>
+
+<div class="alert info">
+    <strong>ℹ️ About Scoring:</strong> 
+    Scores are calculated based on the number of moves and time taken to complete the maze. 
+    Lower moves and faster times result in higher scores!
+</div>
+
+{% if scores %}
+<div class="filter-controls">
+    <label for="filter-size">Maze Size:</label>
+    <select id="filter-size" onchange="filterScores()">
+        <option value="all">All Sizes</option>
+        <option value="20x25">20x25</option>
+        <option value="custom">Custom</option>
+    </select>
+    
+    <label for="filter-algorithm">Algorithm:</label>
+    <select id="filter-algorithm" onchange="filterScores()">
+        <option value="all">All Algorithms</option>
+        <option value="binary_tree">Binary Tree</option>
+        <option value="recursive_backtracker">Recursive Backtracker</option>
+        <option value="aldous_broder">Aldous-Broder</option>
+        <option value="wilson">Wilson</option>
+        <option value="hunt_and_kill">Hunt and Kill</option>
+        <option value="sidewinder">Sidewinder</option>
+    </select>
+</div>
+
+<table class="scores-table">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Score</th>
+            <th>Moves</th>
+            <th>Time</th>
+            <th>Maze Size</th>
+            <th>Algorithm</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody id="scores-body">
+        {% for score in scores %}
+        <tr data-size="{{ score.maze_rows }}x{{ score.maze_cols }}" data-algorithm="{{ score.algorithm }}">
+            <td class="rank {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% elif loop.index == 3 %}bronze{% endif %}">
+                #{{ loop.index }}
+            </td>
+            <td><strong>{{ score.score }}</strong></td>
+            <td>{{ score.moves }}</td>
+            <td>{{ "%.2f"|format(score.elapsed_time) }}s</td>
+            <td>{{ score.maze_rows }}x{{ score.maze_cols }}</td>
+            <td>{{ score.algorithm|replace('_', ' ')|title }}</td>
+            <td>{{ score.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="text-align: center; margin: 30px 0;">
+    <p style="color: #858585;">
+        Showing {{ scores|length }} high scores
+    </p>
+</div>
+
+{% else %}
+<div class="no-scores">
+    <h3>No High Scores Yet</h3>
+    <p>Be the first to complete a maze and set a high score!</p>
+    <a href="/terminal" class="button" style="margin-top: 20px;">
+        🎮 Play Now
+    </a>
+</div>
+{% endif %}
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="/terminal" class="button">🎮 Play Game</a>
+    <a href="/" class="button secondary">🏠 Home</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterScores() {
+        const sizeFilter = document.getElementById('filter-size').value;
+        const algoFilter = document.getElementById('filter-algorithm').value;
+        const rows = document.querySelectorAll('#scores-body tr');
+        
+        let visibleCount = 0;
+        rows.forEach((row, index) => {
+            const size = row.getAttribute('data-size');
+            const algo = row.getAttribute('data-algorithm');
+            
+            let showRow = true;
+            
+            if (sizeFilter !== 'all' && size !== sizeFilter) {
+                showRow = false;
+            }
+            
+            if (algoFilter !== 'all' && algo !== algoFilter) {
+                showRow = false;
+            }
+            
+            if (showRow) {
+                row.style.display = '';
+                visibleCount++;
+                // Update rank
+                const rankCell = row.querySelector('.rank');
+                rankCell.textContent = '#' + visibleCount;
+                rankCell.className = 'rank';
+                if (visibleCount === 1) rankCell.classList.add('gold');
+                else if (visibleCount === 2) rankCell.classList.add('silver');
+                else if (visibleCount === 3) rankCell.classList.add('bronze');
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

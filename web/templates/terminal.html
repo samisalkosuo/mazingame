@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Mazingame - Play{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+<style>
+    #terminal-container {
+        background: #000;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 20px 0;
+    }
+    
+    #terminal {
+        height: 600px;
+    }
+    
+    .controls {
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .controls button {
+        margin: 0 10px;
+    }
+    
+    .session-info {
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+        font-size: 0.9em;
+    }
+    
+    .session-info .info-item {
+        display: inline-block;
+        margin-right: 20px;
+    }
+    
+    .session-info .label {
+        color: #858585;
+    }
+    
+    .session-info .value {
+        color: #007acc;
+        font-weight: bold;
+    }
+    
+    .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        text-align: center;
+    }
+    
+    .status.connected {
+        background: #1e5f1e;
+        color: #4ec94e;
+    }
+    
+    .status.disconnected {
+        background: #5f1e1e;
+        color: #e94e4e;
+    }
+    
+    .status.connecting {
+        background: #5f4e1e;
+        color: #d4a017;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>🎮 Mazingame Terminal</h2>
+
+<div class="session-info">
+    <div class="info-item">
+        <span class="label">Session ID:</span>
+        <span class="value" id="session-id">{{ session_id }}</span>
+    </div>
+    <div class="info-item">
+        <span class="label">Terminal:</span>
+        <span class="value">{{ terminal_name }}</span>
+    </div>
+</div>
+
+<div id="status" class="status connecting">
+    Connecting to terminal...
+</div>
+
+<div id="terminal-container">
+    <div id="terminal"></div>
+</div>
+
+<div class="controls">
+    <button id="btn-new-game" class="button" onclick="newGame()">🔄 New Game</button>
+    <button id="btn-disconnect" class="button secondary" onclick="disconnect()">🚪 Disconnect</button>
+    <button id="btn-home" class="button secondary" onclick="goHome()">🏠 Home</button>
+</div>
+
+<div class="alert info">
+    <strong>💡 Tips:</strong>
+    <ul style="margin: 10px 0 0 20px;">
+        <li>Use arrow keys (↑ ↓ ← →) or WASD to move</li>
+        <li>Press 'q' to quit the current game</li>
+        <li>Your session will expire after 30 minutes of inactivity</li>
+        <li>Close this tab or click "Disconnect" to end your session</li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+
+<script>
+    const sessionId = '{{ session_id }}';
+    const wsUrl = '{{ ws_url }}';
+    let term;
+    let socket;
+    let fitAddon;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    
+    function updateStatus(status, message) {
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'status ' + status;
+        statusEl.textContent = message;
+    }
+    
+    function initTerminal() {
+        // Create terminal
+        term = new Terminal({
+            cursorBlink: true,
+            fontSize: 14,
+            fontFamily: 'Courier New, monospace',
+            theme: {
+                background: '#000000',
+                foreground: '#ffffff',
+                cursor: '#ffffff',
+                cursorAccent: '#000000',
+                selection: 'rgba(255, 255, 255, 0.3)',
+            },
+            cols: 102,
+            rows: 43
+        });
+        
+        // Open terminal in container with fixed size
+        term.open(document.getElementById('terminal'));
+        
+        // Don't use fit addon - keep terminal at exactly 24x80
+        // This matches the PTY size configured on the server
+        
+        // Connect WebSocket
+        connectWebSocket();
+    }
+    
+    function connectWebSocket() {
+        updateStatus('connecting', 'Connecting to terminal...');
+        
+        // Determine WebSocket protocol
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsFullUrl = `${protocol}//${window.location.host}${wsUrl}`;
+        
+        console.log('Connecting to:', wsFullUrl);
+        
+        try {
+            socket = new WebSocket(wsFullUrl);
+            
+            socket.onopen = function() {
+                console.log('WebSocket connected');
+                updateStatus('connected', '✓ Connected - Game is ready!');
+                reconnectAttempts = 0;
+                
+                // Send initial size
+                const size = JSON.stringify({
+                    rows: term.rows,
+                    cols: term.cols
+                });
+                socket.send(JSON.stringify(['set_size', term.rows, term.cols]));
+            };
+            
+            socket.onmessage = function(event) {
+                // Handle incoming data
+                const data = JSON.parse(event.data);
+                if (data[0] === 'stdout') {
+                    term.write(data[1]);
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                updateStatus('disconnected', '✗ Connection error');
+            };
+            
+            socket.onclose = function() {
+                console.log('WebSocket closed');
+                updateStatus('disconnected', '✗ Disconnected from terminal');
+                
+                // Attempt reconnection
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    updateStatus('connecting', `Reconnecting... (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+                    setTimeout(connectWebSocket, 2000);
+                } else {
+                    updateStatus('disconnected', '✗ Connection lost. Please refresh the page.');
+                }
+            };
+            
+            // Handle terminal input
+            term.onData(function(data) {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify(['stdin', data]));
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error creating WebSocket:', error);
+            updateStatus('disconnected', '✗ Failed to connect');
+        }
+    }
+    
+    function disconnect() {
+        if (confirm('Are you sure you want to disconnect?')) {
+            if (socket) {
+                socket.close();
+            }
+            
+            // Call API to terminate session
+            fetch(`/api/session/${sessionId}`, {
+                method: 'DELETE'
+            }).then(() => {
+                window.location.href = '/';
+            });
+        }
+    }
+    
+    function newGame() {
+        if (confirm('Start a new game? This will create a new session.')) {
+            window.location.href = '/terminal';
+        }
+    }
+    
+    function goHome() {
+        if (confirm('Return to home page? Your session will remain active.')) {
+            window.location.href = '/';
+        }
+    }
+    
+    // Initialize terminal on page load
+    window.addEventListener('load', initTerminal);
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (socket) {
+            socket.close();
+        }
+    });
+</script>
+{% endblock %}

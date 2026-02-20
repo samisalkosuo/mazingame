@@ -1,0 +1,6 @@
+# Web deployment dependencies for Mazingame
+Flask>=3.0.0
+terminado>=0.18.0
+tornado>=6.4
+ptyprocess>=0.7.0
+flask-cors>=4.0.0

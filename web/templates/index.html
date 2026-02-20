@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Mazingame - Home{% endblock %}
+
+{% block content %}
+<h2>Welcome to Mazingame!</h2>
+
+<div class="alert info">
+    <strong>ℹ️ About the Game:</strong> Navigate through a maze to find the exit marked with 'X'. 
+    Use arrow keys or WASD to move. Press 'q' to quit.
+</div>
+
+<div class="stats">
+    <div class="stat-box">
+        <div class="number">{{ stats.total_sessions }}</div>
+        <div class="label">Active Sessions</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.max_sessions }}</div>
+        <div class="label">Max Sessions</div>
+    </div>
+    <div class="stat-box">
+        <div class="number">{{ stats.unique_ips }}</div>
+        <div class="label">Unique Players</div>
+    </div>
+</div>
+
+<div style="text-align: center; margin: 40px 0;">
+    <a href="/terminal" class="button" style="font-size: 1.2em; padding: 16px 32px;">
+        🎮 Start Playing Now!
+    </a>
+</div>
+
+<h3 style="margin-top: 40px;">How to Play</h3>
+<ul style="margin: 20px 0; padding-left: 40px; line-height: 2;">
+    <li><strong>Objective:</strong> Find your way through the maze to reach the 'X' marker</li>
+    <li><strong>Controls:</strong> Use arrow keys (↑ ↓ ← →) or WASD keys to move</li>
+    <li><strong>Quit:</strong> Press 'q' or Ctrl+C to exit the game</li>
+    <li><strong>Score:</strong> Your score is based on moves and time taken</li>
+</ul>
+
+<h3 style="margin-top: 40px;">Features</h3>
+<ul style="margin: 20px 0; padding-left: 40px; line-height: 2;">
+    <li>🎲 Multiple maze generation algorithms</li>
+    <li>📊 High score tracking</li>
+    <li>🎬 Game replay functionality</li>
+    <li>🖥️ Adaptive screen modes</li>
+    <li>🌐 Play directly in your browser - no installation needed!</li>
+</ul>
+
+<div class="alert warning" style="margin-top: 40px;">
+    <strong>⚠️ Session Limits:</strong> 
+    Maximum {{ stats.max_per_ip }} concurrent sessions per IP address. 
+    Sessions automatically expire after 30 minutes of inactivity.
+</div>
+
+<h3 style="margin-top: 40px;">Command Line Options</h3>
+<p style="margin: 20px 0;">
+    When playing in the terminal, you can use various options:
+</p>
+<pre style="background: #1e1e1e; padding: 15px; border-radius: 4px; overflow-x: auto;">
+-f, --fullscreen    Use terminal to show entire maze
+--showpath          Show shortest path (cheating!)
+--showmaze          Show entire maze (cheating!)
+-hs, --highscores   Show high scores
+</pre>
+
+<div style="text-align: center; margin: 40px 0;">
+    <a href="/highscores" class="button secondary">
+        📊 View High Scores
+    </a>
+</div>
+{% endblock %}

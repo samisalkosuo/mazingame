@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error_title }} - Mazingame{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 0;">
+    <h2 style="color: #d41717; font-size: 3em;">⚠️</h2>
+    <h2>{{ error_title }}</h2>
+    <p style="margin: 20px 0; font-size: 1.1em;">{{ error_message }}</p>
+    
+    <div style="margin-top: 40px;">
+        <a href="/" class="button">🏠 Go Home</a>
+        <a href="/terminal" class="button secondary">🎮 Try Again</a>
+    </div>
+</div>
+{% endblock %}

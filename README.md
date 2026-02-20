@@ -49,6 +49,34 @@ not see it correctly, so go to GitHub page to see it)::
 
 **Note**: Does not work with Python 2. On Windows, requires WSL (Windows Subsystem for Linux) or Cygwin.
 
+## 🌐 NEW: Play in Your Browser!
+
+**Mazingame is now available as a web application!** Play directly in your browser without any installation.
+
+### Quick Start - Web Version
+
+```bash
+# Using the quick start script (Linux/Mac)
+./scripts/start_web.sh
+
+# Or using PowerShell (Windows)
+.\scripts\start_web.ps1
+
+# Or manually with docker-compose
+docker-compose up -d
+```
+
+Then open your browser and navigate to: **http://localhost:5000**
+
+**Features:**
+- 🎮 Play directly in browser - no installation needed
+- 👥 Multiple concurrent users supported
+- 📊 Shared high scores
+- 🔄 Automatic session management
+- 🐳 Easy Docker deployment
+
+See [WEB_DEPLOYMENT_README.md](WEB_DEPLOYMENT_README.md) for detailed web deployment documentation.
+
 ## Install and usage - Docker
 
 Install from Dockerhub:

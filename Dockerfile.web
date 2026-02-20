@@ -1,0 +1,52 @@
+FROM python:3.11-slim
+
+LABEL maintainer="Sami Salkosuo"
+LABEL description="Mazingame Web - Browser-based terminal game"
+LABEL source_url="https://github.com/samisalkosuo/mazingame"
+
+WORKDIR /app
+
+# Install system dependencies for curses and build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libncurses5-dev \
+    libncursesw5-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy application files
+COPY mazingame/ ./mazingame/
+COPY web/ ./web/
+
+# Install Python dependencies (only web requirements, not the package itself)
+RUN pip install --upgrade pip && \
+    pip install -r web/requirements-web.txt
+
+# Set PYTHONPATH to include the application directory
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Create data directory for highscores
+RUN mkdir -p /data
+
+# Create logs directory
+RUN mkdir -p /app/logs
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV TERM=xterm-256color
+ENV MAZINGAME_HIGHSCORE_FILE=/data/mazingame_highscores.sqlite
+ENV MAZINGAME_DATA_DIR=/data
+ENV FLASK_APP=web.app
+ENV FLASK_ENV=production
+
+# Expose port
+EXPOSE 5000
+
+# Volume for persistent data
+VOLUME ["/data"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
+
+# Run the application
+CMD ["python", "-m", "web.app"]

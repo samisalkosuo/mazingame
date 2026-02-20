@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mazingame-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: mazingame-web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    environment:
+      # Flask configuration
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+      
+      # Session limits
+      - MAX_CONCURRENT_SESSIONS=${MAX_CONCURRENT_SESSIONS:-50}
+      - MAX_SESSIONS_PER_IP=${MAX_SESSIONS_PER_IP:-3}
+      - SESSION_TIMEOUT=${SESSION_TIMEOUT:-1800}
+      - SESSION_ABSOLUTE_TIMEOUT=${SESSION_ABSOLUTE_TIMEOUT:-7200}
+      - SESSION_CLEANUP_INTERVAL=${SESSION_CLEANUP_INTERVAL:-300}
+      
+      # Terminal configuration
+      - TERMINAL_ROWS=${TERMINAL_ROWS:-43}
+      - TERMINAL_COLS=${TERMINAL_COLS:-102}
+      - TERM_TYPE=xterm-256color
+      
+      # Data paths
+      - MAZINGAME_HIGHSCORE_FILE=/data/mazingame_highscores.sqlite
+      - MAZINGAME_DATA_DIR=/data
+      
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MAZINGAME_LOG_FILE=/app/logs/mazingame.log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mazingame-network
+
+networks:
+  mazingame-network:
+    driver: bridge
+
+volumes:
+  data:
+  logs:
+
+# Made with Bob
